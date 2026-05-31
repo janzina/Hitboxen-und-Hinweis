@@ -1,0 +1,4 @@
+--patch-module
+com.bta.ahaus.lama=_
+--add-reads
+com.bta.ahaus.lama=ALL-UNNAMED
