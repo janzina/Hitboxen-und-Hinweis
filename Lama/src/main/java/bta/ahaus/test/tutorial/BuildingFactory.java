@@ -9,8 +9,9 @@ import javafx.geometry.Point2D;
 
 public class BuildingFactory {
 
-    public Entity createBuildingEntity(String pngName, double worldX, double worldY,
-                                        String interactLabel) {
+    /** Hauptmethode – wird von MVerwaltung.addBuildings() verwendet */
+    public Entity createBuilding(String pngName, double worldX, double worldY,
+                                  String interactLabel) {
         Texture tex = FXGL.texture("buildings/" + pngName);
 
         double scale = 2.0;
