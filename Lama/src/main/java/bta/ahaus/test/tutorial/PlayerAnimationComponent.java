@@ -39,7 +39,7 @@ public class PlayerAnimationComponent extends Component {
  
     @Override
     public void onAdded() {
-        sheetImage = FXGL.getAssetLoader().loadImage("lala .png");
+        sheetImage = FXGL.getAssetLoader().loadImage("spieler.png");
  
         imageView = new ImageView(sheetImage);
         imageView.setFitWidth(FRAME_W);

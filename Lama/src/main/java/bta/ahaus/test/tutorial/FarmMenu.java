@@ -66,10 +66,7 @@ public class FarmMenu {
         // Saatgut-Zeile (alle PlantTypes)
         HBox seedRow = new HBox(8);
         seedRow.setAlignment(Pos.CENTER_LEFT);
-      for (PlantType type : PlantType.values()) {
-            if (type.isSpezialitaet())
-                continue;
-
+        for (PlantType type : PlantType.values()) {
             Button btn = makeSeedButton(type, coinLabel);
             seedRow.getChildren().add(btn);
         }

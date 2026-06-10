@@ -1,16 +1,27 @@
 package bta.ahaus.test.tutorial;
 
 public class PlayerStats {
-    private static PlayerStats instance;
+    private static final PlayerStats INSTANCE = new PlayerStats();
+    private PlayerStats() {}
+    public static PlayerStats getInstance() { return INSTANCE; }
+
+    // ── Hunger ────────────────────────────────────────────────────────────────
+    private double hunger = 100;
+
+    public double  getHunger()                { return hunger; }
+    public void    addHunger(double amount)   { hunger = Math.min(100, hunger + amount); }
+    public void    removeHunger(double amount){ hunger = Math.max(0,   hunger - amount); }
+    public boolean isFull()                   { return hunger >= 100; }
+
+    // ── XP ────────────────────────────────────────────────────────────────────
     private int xp = 0;
 
-    private PlayerStats() {}
-
-    public static PlayerStats getInstance() {
-        if (instance == null) instance = new PlayerStats();
-        return instance;
-    }
-
+    public int  getXP()           { return xp; }
     public void addXP(int amount) { xp += amount; }
-    public int getXP()            { return xp; }
+
+    // ── Coins ─────────────────────────────────────────────────────────────────
+    private int coins = 0;
+
+    public int  getCoins()           { return coins; }
+    public void addCoins(int amount) { coins += amount; }
 }

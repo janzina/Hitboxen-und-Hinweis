@@ -14,11 +14,21 @@ import javafx.scene.input.KeyCode;
 
 public class MVerwaltung extends GameApplication {
 
+    private static MVerwaltung instance;
+
+    public MVerwaltung() { instance = this; }
+
+    public static MVerwaltung getInstance() { return instance; }
+    public Inventory getInventory()         { return inventory; }
+
+    // ── Spiel-Objekte ─────────────────────────────────────────────────────────
     private Hintergrund     hintergrund;
     private BuildingFactory uiFactory;
     private Entity          player;
+    private Entity          lama;
     private HudDisplay      hudDisplay;
 
+    // ── Farming-System ────────────────────────────────────────────────────────
     private static final double FIELD_X = 256;
     private static final double FIELD_Y = 256;
 
@@ -26,9 +36,12 @@ public class MVerwaltung extends GameApplication {
     private FarmMenu    farmMenu;
     private Inventory   inventory;
     private InventoryUI inventoryUI;
-    private LamaDreck   lamaDreck;      // NEU
+    private LamaDreck   lamaDreck;
 
-    private double debugTimer = 0;
+    private double debugTimer  = 0;
+    private double hungerTimer = 0;  // ── NEU
+
+    // ── Settings ──────────────────────────────────────────────────────────────
 
     @Override
     protected void initSettings(GameSettings settings) {
@@ -38,6 +51,8 @@ public class MVerwaltung extends GameApplication {
         settings.setProfilingEnabled(false);
         settings.setTicksPerSecond(60);
     }
+
+    // ── Input ─────────────────────────────────────────────────────────────────
 
     @Override
     protected void initInput() {
@@ -88,17 +103,18 @@ public class MVerwaltung extends GameApplication {
         }, KeyCode.SPACE);
     }
 
+    // ── Game Init ─────────────────────────────────────────────────────────────
+
     @Override
     protected void initGame() {
         hintergrund = new Hintergrund();
         hintergrund.loadMapWithLayers();
 
-        // NEU – erst inventory und lamaDreck erstellen
         inventory = new Inventory();
         lamaDreck = new LamaDreck();
 
         uiFactory = new BuildingFactory();
-        addBuildings();  // jetzt NACH inventory und lamaDreck
+        addBuildings();
 
         player = FXGL.entityBuilder()
                 .at(200, 200)
@@ -115,9 +131,21 @@ public class MVerwaltung extends GameApplication {
 
         player.getComponent(MovementComponent.class).setHintergrund(hintergrund);
 
+        lama = FXGL.entityBuilder()
+                .at(200, 200)
+                .type(EntityType.PLAYER)
+                .with(new LlamaAnimationComponent())
+                .with(new LlamaFollowComponent(player))
+                .zIndex(99)
+                .buildAndAttach();
+
         FXGL.getGameScene()
             .getViewport()
             .bindToEntity(player, 400, 300);
+
+        FXGL.getGameScene()
+            .getViewport()
+            .setBounds(0, 0, 48 * 64, 29 * 64);
 
         FXGL.getGameTimer().runAtInterval(() -> {
             double px = playerFootX();
@@ -133,12 +161,14 @@ public class MVerwaltung extends GameApplication {
                 });
         }, javafx.util.Duration.millis(100));
 
-        hudDisplay = new HudDisplay(PlayerStats.getInstance(), lamaDreck);
+        hudDisplay  = new HudDisplay(lamaDreck);
         farmField   = new FarmField(FIELD_X, FIELD_Y);
         farmMenu    = new FarmMenu(inventory, farmField, () ->
                 new double[]{ playerFootX(), playerFootY() });
         inventoryUI = new InventoryUI(inventory);
     }
+
+    // ── Update ────────────────────────────────────────────────────────────────
 
     @Override
     protected void onUpdate(double tpf) {
@@ -148,7 +178,14 @@ public class MVerwaltung extends GameApplication {
 
         if (inventoryUI != null) inventoryUI.refresh();
         if (hudDisplay  != null) hudDisplay.refresh();
-        if (lamaDreck   != null) lamaDreck.update(tpf);  // NEU
+        if (lamaDreck   != null) lamaDreck.update(tpf);
+
+        // ── Hunger sinkt alle 5 Sekunden um 1% ───────────────────────────
+        hungerTimer += tpf;
+        if (hungerTimer >= 5.0) {
+            hungerTimer = 0;
+            PlayerStats.getInstance().removeHunger(1);
+        }
 
         if (farmMenu != null && farmMenu.isVisible()) {
             if (!farmField.contains(playerFootX(), playerFootY())) {
@@ -165,8 +202,12 @@ public class MVerwaltung extends GameApplication {
         }
     }
 
+    // ── Hilfsmethoden ─────────────────────────────────────────────────────────
+
     private double playerFootX() { return player.getX() + 22 + 10; }
     private double playerFootY() { return player.getY() + 112 + 8; }
+
+    // ── Gebäude ───────────────────────────────────────────────────────────────
 
     private void addBuildings() {
         uiFactory.createBuilding("Scheeune.jpg",     850,  200,  "Putzen",        inventory, lamaDreck);

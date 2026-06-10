@@ -12,12 +12,19 @@ public class BuildingInteractComponent extends Component {
     private boolean isOpen            = false;
     private boolean notificationShown = false;
 
+    // ── Vollständiger Konstruktor ─────────────────────────────────────────────
     public BuildingInteractComponent(String name, Inventory inventory, LamaDreck lamaDreck) {
         this.name      = name;
         this.inventory = inventory;
         this.lamaDreck = lamaDreck;
     }
 
+    // ── Kompatibilitäts-Überladung (alte Aufrufe ohne Inventory/LamaDreck) ───
+    public BuildingInteractComponent(String name) {
+        this(name, null, null);
+    }
+
+    // ── Proximity-Logik ───────────────────────────────────────────────────────
     public void setPlayerNearby(boolean nearby) {
         if (this.playerNearby == nearby) return;
         this.playerNearby = nearby;
@@ -30,23 +37,53 @@ public class BuildingInteractComponent extends Component {
 
     public boolean isPlayerNearby() { return playerNearby; }
     public boolean isOpen()         { return isOpen; }
-    public String getName()         { return name; }
-    
-    
+    public String  getName()        { return name; }
+
+    // ── Interaktions-Logik ────────────────────────────────────────────────────
     public void interact() {
         if (!playerNearby) return;
-        if (name.equals("Putzen")) {
-            if (lamaDreck.kannGeputztWerden()) {
-                PutzMinispiel.open(inventory, lamaDreck);
-            } else {
-                FXGL.getNotificationService().pushNotification(
-                    "Das Lama ist noch sauber! (" + lamaDreck.getDreckProzent() + "%)");
-            }
-        } else if (name.equals("Shop betreten")) {   
-            ShopMinispiel.open(inventory);
-        } else {
-            isOpen = !isOpen;
-            System.out.println(isOpen ? name + " geöffnet!" : name + " geschlossen!");
+
+        switch (name) {
+
+            case "Futtern":
+                new FeedingGameWindow(
+                        inventory != null ? inventory
+                                          : MVerwaltung.getInstance().getInventory()
+                ).show();
+                break;
+
+            case "Shop betreten":
+                ShopMinispiel.open(
+                        inventory != null ? inventory
+                                          : MVerwaltung.getInstance().getInventory()
+                );
+                break;
+
+            case "Putzen":
+                if (lamaDreck != null && lamaDreck.kannGeputztWerden()) {
+                    PutzMinispiel.open(
+                            inventory != null ? inventory
+                                              : MVerwaltung.getInstance().getInventory(),
+                            lamaDreck
+                    );
+                } else {
+                    FXGL.getNotificationService().pushNotification(
+                            lamaDreck != null
+                                    ? "Das Lama ist noch sauber! (" + lamaDreck.getDreckProzent() + "%)"
+                                    : "Putzen gerade nicht möglich."
+                    );
+                }
+                break;
+
+            case "Erkunden":
+                isOpen = !isOpen;
+                System.out.println(isOpen ? "Erkunden geöffnet!" : "Erkunden geschlossen!");
+                break;
+
+            default:
+                isOpen = !isOpen;
+                System.out.println(isOpen ? name + " geöffnet!" : name + " geschlossen!");
+                break;
         }
     }
 }

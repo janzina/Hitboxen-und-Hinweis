@@ -9,15 +9,16 @@ import javafx.geometry.Point2D;
 
 public class BuildingFactory {
 
+    // ── Vollständige Signatur mit Inventory & LamaDreck ──────────────────────
     public Entity createBuilding(String pngName, double worldX, double worldY,
-                                  String interactLabel,
-                                  Inventory inventory, LamaDreck lamaDreck) {
-        
+                                 String interactLabel,
+                                 Inventory inventory, LamaDreck lamaDreck) {
+
         Texture tex = FXGL.texture("buildings/" + pngName);
 
         double scale = 2.0;
-        if (pngName.equalsIgnoreCase("Futtier.png")) scale = 1.5;
-        if (pngName.equalsIgnoreCase("Gebaude.png")) scale = 1.0;
+        if (pngName.equalsIgnoreCase("Futtier.png"))  scale = 1.5;
+        if (pngName.equalsIgnoreCase("Gebaude.png"))  scale = 1.0;
 
         tex.setScaleX(scale);
         tex.setScaleY(scale);
@@ -36,4 +37,6 @@ public class BuildingFactory {
                 .zIndex(50)
                 .buildAndAttach();
     }
+
+
 }

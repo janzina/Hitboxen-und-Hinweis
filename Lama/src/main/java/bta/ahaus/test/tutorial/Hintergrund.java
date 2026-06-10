@@ -142,4 +142,23 @@ public class Hintergrund {
     }
 
     public int getTileSize() { return tileSize; }
+    
+    public int getRows() {
+    return mapRows;
+}
+
+public int getCols() {
+    return mapCols;
+}
+
+public boolean isWalkableTile(int row, int col) {
+
+    if (row < 0 || row >= mapRows)
+        return false;
+
+    if (col < 0 || col >= mapCols)
+        return false;
+
+    return collisionMap[row][col];
+}
 }
