@@ -5,13 +5,17 @@ import com.almasb.fxgl.entity.component.Component;
 
 public class BuildingInteractComponent extends Component {
 
-    private boolean playerNearby = false;
-    private boolean isOpen = false;
-    private String name;
+    private final String    name;
+    private final Inventory inventory;
+    private final LamaDreck lamaDreck;
+    private boolean playerNearby      = false;
+    private boolean isOpen            = false;
     private boolean notificationShown = false;
 
-    public BuildingInteractComponent(String name) {
-        this.name = name;
+    public BuildingInteractComponent(String name, Inventory inventory, LamaDreck lamaDreck) {
+        this.name      = name;
+        this.inventory = inventory;
+        this.lamaDreck = lamaDreck;
     }
 
     public void setPlayerNearby(boolean nearby) {
@@ -21,18 +25,28 @@ public class BuildingInteractComponent extends Component {
             FXGL.getNotificationService().pushNotification("E drücken zum " + name);
             notificationShown = true;
         }
-        if (!nearby) {
-            notificationShown = false;
-        }
+        if (!nearby) notificationShown = false;
     }
 
     public boolean isPlayerNearby() { return playerNearby; }
     public boolean isOpen()         { return isOpen; }
     public String getName()         { return name; }
-
+    
+    
     public void interact() {
         if (!playerNearby) return;
-        isOpen = !isOpen;
-        System.out.println(isOpen ? name + " geöffnet!" : name + " geschlossen!");
+        if (name.equals("Putzen")) {
+            if (lamaDreck.kannGeputztWerden()) {
+                PutzMinispiel.open(inventory, lamaDreck);
+            } else {
+                FXGL.getNotificationService().pushNotification(
+                    "Das Lama ist noch sauber! (" + lamaDreck.getDreckProzent() + "%)");
+            }
+        } else if (name.equals("Shop betreten")) {   
+            ShopMinispiel.open(inventory);
+        } else {
+            isOpen = !isOpen;
+            System.out.println(isOpen ? name + " geöffnet!" : name + " geschlossen!");
+        }
     }
 }

@@ -14,23 +14,21 @@ import javafx.scene.input.KeyCode;
 
 public class MVerwaltung extends GameApplication {
 
-    // ── Spiel-Objekte ─────────────────────────────────────────────────────────
     private Hintergrund     hintergrund;
     private BuildingFactory uiFactory;
     private Entity          player;
+    private HudDisplay      hudDisplay;
 
-    // ── Farming-System ────────────────────────────────────────────────────────
-    private static final double FIELD_X = 256;   // ← anpassen!
-    private static final double FIELD_Y = 256;   // ← anpassen!
+    private static final double FIELD_X = 256;
+    private static final double FIELD_Y = 256;
 
     private FarmField   farmField;
     private FarmMenu    farmMenu;
     private Inventory   inventory;
     private InventoryUI inventoryUI;
+    private LamaDreck   lamaDreck;      // NEU
 
     private double debugTimer = 0;
-
-    // ── Settings ──────────────────────────────────────────────────────────────
 
     @Override
     protected void initSettings(GameSettings settings) {
@@ -40,8 +38,6 @@ public class MVerwaltung extends GameApplication {
         settings.setProfilingEnabled(false);
         settings.setTicksPerSecond(60);
     }
-
-    // ── Input ─────────────────────────────────────────────────────────────────
 
     @Override
     protected void initInput() {
@@ -71,7 +67,6 @@ public class MVerwaltung extends GameApplication {
             }
         }, KeyCode.S);
 
-        // E-Taste: Gebäude-Interaktion
         input.addAction(new UserAction("INTERACT") {
             @Override protected void onActionBegin() {
                 FXGL.getGameWorld()
@@ -84,7 +79,6 @@ public class MVerwaltung extends GameApplication {
             }
         }, KeyCode.E);
 
-        // Leertaste: Farm-Menü (nur wenn Spieler auf dem Feld steht)
         input.addAction(new UserAction("FARM_MENU") {
             @Override protected void onActionBegin() {
                 if (farmField.contains(playerFootX(), playerFootY())) {
@@ -94,17 +88,18 @@ public class MVerwaltung extends GameApplication {
         }, KeyCode.SPACE);
     }
 
-    // ── Game Init ─────────────────────────────────────────────────────────────
-
     @Override
     protected void initGame() {
         hintergrund = new Hintergrund();
         hintergrund.loadMapWithLayers();
 
-        uiFactory = new BuildingFactory();
-        addBuildings();
+        // NEU – erst inventory und lamaDreck erstellen
+        inventory = new Inventory();
+        lamaDreck = new LamaDreck();
 
-        // Spieler
+        uiFactory = new BuildingFactory();
+        addBuildings();  // jetzt NACH inventory und lamaDreck
+
         player = FXGL.entityBuilder()
                 .at(200, 200)
                 .type(EntityType.PLAYER)
@@ -124,8 +119,6 @@ public class MVerwaltung extends GameApplication {
             .getViewport()
             .bindToEntity(player, 400, 300);
 
-        // Näheprüfung für Gebäude-Interaktion (alle 100ms)
-        // Vergleicht Spieler-Fußpunkt mit dem unteren Mittelpunkt des Gebäudes
         FXGL.getGameTimer().runAtInterval(() -> {
             double px = playerFootX();
             double py = playerFootY();
@@ -133,22 +126,19 @@ public class MVerwaltung extends GameApplication {
                 .getEntitiesByType(EntityType.BUILDING)
                 .forEach(s -> {
                     double bcx  = s.getX() + s.getWidth()  / 2.0;
-                    double bcy  = s.getY() + s.getHeight();   // untere Kante
+                    double bcy  = s.getY() + s.getHeight();
                     double dist = Math.hypot(px - bcx, py - bcy);
                     s.getComponent(BuildingInteractComponent.class)
                      .setPlayerNearby(dist < 300);
                 });
         }, javafx.util.Duration.millis(100));
 
-        // Farming
-        inventory   = new Inventory();
+        hudDisplay = new HudDisplay(PlayerStats.getInstance(), lamaDreck);
         farmField   = new FarmField(FIELD_X, FIELD_Y);
         farmMenu    = new FarmMenu(inventory, farmField, () ->
                 new double[]{ playerFootX(), playerFootY() });
         inventoryUI = new InventoryUI(inventory);
     }
-
-    // ── Update ────────────────────────────────────────────────────────────────
 
     @Override
     protected void onUpdate(double tpf) {
@@ -156,9 +146,9 @@ public class MVerwaltung extends GameApplication {
             player.getComponent(MovementComponent.class).finishFrame();
         }
 
-        if (inventoryUI != null) {
-            inventoryUI.refresh();
-        }
+        if (inventoryUI != null) inventoryUI.refresh();
+        if (hudDisplay  != null) hudDisplay.refresh();
+        if (lamaDreck   != null) lamaDreck.update(tpf);  // NEU
 
         if (farmMenu != null && farmMenu.isVisible()) {
             if (!farmField.contains(playerFootX(), playerFootY())) {
@@ -166,7 +156,6 @@ public class MVerwaltung extends GameApplication {
             }
         }
 
-        // Debug: alle 3s Fußposition ausgeben (entfernen wenn Feld passt)
         debugTimer += tpf;
         if (debugTimer >= 3.0) {
             debugTimer = 0;
@@ -176,23 +165,19 @@ public class MVerwaltung extends GameApplication {
         }
     }
 
-    // ── Hilfsmethoden ────────────────────────────────────────────────────────
-
     private double playerFootX() { return player.getX() + 22 + 10; }
     private double playerFootY() { return player.getY() + 112 + 8; }
 
-    // ── Gebäude ───────────────────────────────────────────────────────────────
-
     private void addBuildings() {
-        uiFactory.createBuilding("Scheeune.jpg",     850,  200,  "Putzen");
-        uiFactory.createBuilding("Eight_Eleven.png", 300,  1100, "Shop betreten");
-        uiFactory.createBuilding("Futtier.png",      1800, 200,  "Futtern");
-        uiFactory.createBuilding("Gebaude.png",      2200, 900,  "Erkunden");
+        uiFactory.createBuilding("Scheeune.jpg",     850,  200,  "Putzen",        inventory, lamaDreck);
+        uiFactory.createBuilding("Eight_Eleven.png", 300,  1100, "Shop betreten", inventory, lamaDreck);
+        uiFactory.createBuilding("Futtier.png",      1800, 200,  "Futtern",       inventory, lamaDreck);
+        uiFactory.createBuilding("Gebaude.png",      2200, 900,  "Erkunden",      inventory, lamaDreck);
 
-        hintergrund.addBlockedArea(775,  200,  450, 450);   // Scheune
-        hintergrund.addBlockedArea(250,  1100, 300, 400);   // Shop
-        hintergrund.addBlockedArea(1800, 200,  550, 500);   // Füttern
-        hintergrund.addBlockedArea(2190, 900,  590, 746);   // Erkunden
+        hintergrund.addBlockedArea(775,  200,  450, 450);
+        hintergrund.addBlockedArea(250,  1100, 300, 400);
+        hintergrund.addBlockedArea(1800, 200,  550, 550);
+        hintergrund.addBlockedArea(2190, 900,  590, 746);
     }
 
     public static void main(String[] args) {

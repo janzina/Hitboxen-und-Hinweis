@@ -9,9 +9,10 @@ import javafx.geometry.Point2D;
 
 public class BuildingFactory {
 
-    /** Hauptmethode – wird von MVerwaltung.addBuildings() verwendet */
     public Entity createBuilding(String pngName, double worldX, double worldY,
-                                  String interactLabel) {
+                                  String interactLabel,
+                                  Inventory inventory, LamaDreck lamaDreck) {
+        
         Texture tex = FXGL.texture("buildings/" + pngName);
 
         double scale = 2.0;
@@ -31,7 +32,7 @@ public class BuildingFactory {
                 .bbox(new HitBox(
                         new Point2D(10, 10),
                         BoundingShape.box(w - 20, h - 10)))
-                .with(new BuildingInteractComponent(interactLabel))
+                .with(new BuildingInteractComponent(interactLabel, inventory, lamaDreck))
                 .zIndex(50)
                 .buildAndAttach();
     }
