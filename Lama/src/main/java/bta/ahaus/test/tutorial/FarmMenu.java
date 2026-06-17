@@ -1,236 +1,510 @@
-package bta.ahaus.test.tutorial;
+package bta.ahaus.lamaDrama.view.ui;
 
+import bta.ahaus.lamaDrama.controller.component.PlantComponent;
+import bta.ahaus.lamaDrama.controller.component.WateringAnimation;
+import bta.ahaus.lamaDrama.model.data.Inventory;
+import bta.ahaus.lamaDrama.model.entity.PlantType;
+import bta.ahaus.lamaDrama.model.entity.FarmField;
 import com.almasb.fxgl.dsl.FXGL;
+import javafx.animation.*;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.control.Button;
+import javafx.scene.Group;
 import javafx.scene.control.Label;
+import javafx.scene.control.Tooltip;
+import javafx.scene.effect.DropShadow;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
+import javafx.scene.paint.LinearGradient;
+import javafx.scene.paint.Stop;
+import javafx.scene.paint.CycleMethod;
+import javafx.scene.shape.*;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
+import javafx.util.Duration;
+
+import java.util.function.Supplier;
 
 /**
- * Kontextmenü (Leertaste) auf dem Feld.
- * Zeigt Saatgut-Auswahl, Bewässern- und Ernten-Buttons.
+ * Werkzeug-Toolbar für das Ackerstück.
+ *
+ * Steuerung:
+ *   1. Werkzeug in der Toolbar wählen (Samen, Gießkanne, Sichel)
+ *   2. Auf eine Zelle im Feld klicken → Aktion wird ausgeführt
+ *
+ * Saatgut-Icons werden als JavaFX-Vektoren gezeichnet (SeedIcon).
+ * Werkzeug-Icons (Gießkanne, Sichel) sind ebenfalls eingebettet.
  */
 public class FarmMenu {
 
-    private final VBox       root;
-    private final Inventory  inventory;
-    private final FarmField  field;
+    // ── Werkzeugmodus ─────────────────────────────────────────────────────────
+    public enum Tool { NONE, SEED, WATER, HARVEST }
 
-    /** Callback: Spieler-Fußposition (Mitte unten) für Zell-Berechnung */
-    private java.util.function.Supplier<double[]> playerPosSupplier;
+    private Tool        activeTool = Tool.NONE;
+    private PlantType   selectedSeed = null;
+
+    // ── Refs ──────────────────────────────────────────────────────────────────
+    private final VBox      root;
+    private final Inventory inventory;
+    private final FarmField field;
+    private final Supplier<double[]> playerPosSupplier;
+
+    // Animation
+    private WateringAnimation wateringAnimation;
+
+    // UI-Refs für Updates
+    private Label    feedbackLabel;
+    private Label    coinLabel;
+    private HBox     seedRow;
+    private StackPane waterToolBtn;
+    private StackPane harvestToolBtn;
 
     private boolean visible = false;
 
+    // ── Farben / Stil (rustikales Holz-Farm-Theme) ────────────────────────────
+    private static final String BG_DARK   = "-fx-background-color: #2b1a0e;";
+    private static final String BG_MID    = "-fx-background-color: #3d2410;";
+    private static final String BG_HOVER  = "-fx-background-color: #5a3520;";
+    private static final String BG_ACTIVE = "-fx-background-color: #7a4a10;";
+    private static final Color  GOLD      = Color.web("#d4a017");
+    private static final Color  LIGHT_TAN = Color.web("#f5deb3");
+    private static final Color  DIM_TAN   = Color.web("#a08060");
+
+    // ─────────────────────────────────────────────────────────────────────────
+
     public FarmMenu(Inventory inventory, FarmField field,
-                    java.util.function.Supplier<double[]> playerPosSupplier) {
-        this.inventory          = inventory;
-        this.field              = field;
-        this.playerPosSupplier  = playerPosSupplier;
+                    Supplier<double[]> playerPosSupplier) {
+        this.inventory         = inventory;
+        this.field             = field;
+        this.playerPosSupplier = playerPosSupplier;
+
+        wateringAnimation = new WateringAnimation();
 
         root = buildUI();
         root.setVisible(false);
 
-        // Zum UI-Layer hinzufügen (fixiert auf dem Bildschirm)
         FXGL.getGameScene().addUINode(root);
 
-        // Position: mittig unten im Bildschirm
-        root.setTranslateX(FXGL.getAppWidth() / 2.0 - 220);
-        root.setTranslateY(FXGL.getAppHeight() - 320);
+        // Oben-mittig positionieren – Feld bleibt unten frei zum Anklicken
+        root.setTranslateX(FXGL.getAppWidth() / 2.0 - 270);
+        root.setTranslateY(10);
     }
 
     // ── UI aufbauen ───────────────────────────────────────────────────────────
 
     private VBox buildUI() {
-        VBox panel = new VBox(8);
-        panel.setPadding(new Insets(14));
-        panel.setPrefWidth(440);
+
+        // ── Haupt-Panel ──────────────────────────────────────────────────────
+        VBox panel = new VBox(10);
+        panel.setPadding(new Insets(14, 18, 14, 18));
+        panel.setPrefWidth(540);
+
+        // Holz-Gradient-Hintergrund
         panel.setBackground(new Background(new BackgroundFill(
-                Color.rgb(30, 18, 8, 0.92),
-                new CornerRadii(12), Insets.EMPTY)));
+                new LinearGradient(0, 0, 0, 1, true, CycleMethod.NO_CYCLE,
+                        new Stop(0.0, Color.web("#3d2410")),
+                        new Stop(1.0, Color.web("#1e0f06"))),
+                new CornerRadii(14), Insets.EMPTY)));
+
         panel.setBorder(new Border(new BorderStroke(
-                Color.GOLDENROD, BorderStrokeStyle.SOLID,
-                new CornerRadii(12), new BorderWidths(2))));
+                GOLD, BorderStrokeStyle.SOLID,
+                new CornerRadii(14), new BorderWidths(2))));
 
-        Label title = new Label("🌱 Ackerbau");
-        title.setFont(Font.font("Arial", FontWeight.BOLD, 18));
-        title.setTextFill(Color.LIGHTGOLDENRODYELLOW);
+        DropShadow shadow = new DropShadow(18, Color.BLACK);
+        shadow.setSpread(0.2);
+        panel.setEffect(shadow);
 
-        Label coinLabel = new Label();
-        coinLabel.setTextFill(Color.GOLD);
-        coinLabel.setFont(Font.font(14));
+        // ── Titelzeile ───────────────────────────────────────────────────────
+        HBox titleRow = new HBox(10);
+        titleRow.setAlignment(Pos.CENTER_LEFT);
 
-        // Saatgut-Zeile (alle PlantTypes)
-        HBox seedRow = new HBox(8);
+        Label title = new Label("🌾  Ackerbau");
+        title.setFont(Font.font("Georgia", FontWeight.BOLD, 20));
+        title.setTextFill(GOLD);
+
+        Region spacer = new Region();
+        HBox.setHgrow(spacer, Priority.ALWAYS);
+
+        coinLabel = new Label("💰 " + inventory.getCoins());
+        coinLabel.setFont(Font.font("Georgia", FontWeight.BOLD, 15));
+        coinLabel.setTextFill(GOLD);
+
+        // Schließen-Button (kleines ×)
+        Label closeBtn = new Label("✕");
+        closeBtn.setFont(Font.font("Arial", FontWeight.BOLD, 16));
+        closeBtn.setTextFill(DIM_TAN);
+        closeBtn.setStyle("-fx-cursor: hand;");
+        closeBtn.setOnMouseEntered(e -> closeBtn.setTextFill(Color.TOMATO));
+        closeBtn.setOnMouseExited(e  -> closeBtn.setTextFill(DIM_TAN));
+        closeBtn.setOnMouseClicked(e -> hide());
+
+        titleRow.getChildren().addAll(title, spacer, coinLabel, closeBtn);
+
+        // ── Trennlinie ───────────────────────────────────────────────────────
+        Rectangle divider = makeDivider();
+
+        // ── Saatgut-Zeile ────────────────────────────────────────────────────
+        Label seedLabel = sectionLabel("Saatgut");
+        seedRow = new HBox(8);
         seedRow.setAlignment(Pos.CENTER_LEFT);
         for (PlantType type : PlantType.values()) {
-            Button btn = makeSeedButton(type, coinLabel);
-            seedRow.getChildren().add(btn);
+            if (!type.isPflanze()) continue;   // nur Feld-Pflanzen
+            seedRow.getChildren().add(makeSeedButton(type));
         }
 
-        // Aktion-Buttons
-        HBox actionRow = new HBox(12);
-        actionRow.setAlignment(Pos.CENTER);
+        // ── Werkzeuge ────────────────────────────────────────────────────────
+        Label toolLabel = sectionLabel("Werkzeuge");
+        HBox toolRow = new HBox(12);
+        toolRow.setAlignment(Pos.CENTER_LEFT);
 
-        Button waterBtn = makeActionButton("💧 Bewässern", Color.DEEPSKYBLUE);
-        waterBtn.setOnAction(e -> {
-            double[] pos = playerPosSupplier.get();
-            boolean watered = field.waterPlants(pos[0], pos[1]);
-            showFeedback(watered ? "Bewässert! 💧" : "Keine Pflanze braucht Wasser hier.", watered);
-        });
+        waterToolBtn   = makeToolButton(Tool.WATER);
+        harvestToolBtn = makeToolButton(Tool.HARVEST);
 
-        Button harvestBtn = makeActionButton("🌾 Ernten", Color.GOLDENROD);
-        harvestBtn.setOnAction(e -> {
-            double[] pos = playerPosSupplier.get();
-            PlantType harvested = field.harvest(pos[0], pos[1]);
-            if (harvested != null) {
-                inventory.addItem(harvested, harvested.harvestAmount);
-                showFeedback("+" + harvested.harvestAmount + " " + harvested.displayName + " geerntet! " + harvested.emoji, true);
-            } else {
-                PlantComponent comp = field.getPlantAt(pos[0], pos[1]);
-                if (comp != null && comp.needsWater())
-                    showFeedback("Pflanze braucht Wasser! 💧", false);
-                else
-                    showFeedback("Hier ist noch nichts reif.", false);
-            }
-            refreshCoinLabel(coinLabel);
-        });
+        toolRow.getChildren().addAll(waterToolBtn, harvestToolBtn);
 
-        Button closeBtn = makeActionButton("✖ Schließen", Color.LIGHTCORAL);
-        closeBtn.setOnAction(e -> hide());
+        // ── Feedback-Zeile ───────────────────────────────────────────────────
+        feedbackLabel = new Label("Wähle ein Werkzeug oder Saatgut, dann klicke auf eine Zelle.");
+        feedbackLabel.setFont(Font.font("Arial", 13));
+        feedbackLabel.setTextFill(DIM_TAN);
+        feedbackLabel.setWrapText(true);
+        feedbackLabel.setMaxWidth(500);
 
-        actionRow.getChildren().addAll(waterBtn, harvestBtn, closeBtn);
+        panel.getChildren().addAll(
+                titleRow, divider,
+                seedLabel, seedRow,
+                makeDivider(),
+                toolLabel, toolRow,
+                makeDivider(),
+                feedbackLabel);
 
-        // Feedback-Label
-        Label feedback = new Label("");
-        feedback.setTextFill(Color.LIGHTGREEN);
-        feedback.setFont(Font.font(13));
-        feedback.setWrapText(true);
-        feedbackLabel = feedback;
-
-        panel.getChildren().addAll(title, coinLabel, new Label("── Saatgut ──") {{
-            setTextFill(Color.BURLYWOOD); setFont(Font.font(12));
-        }}, seedRow, new Label("── Aktionen ──") {{
-            setTextFill(Color.BURLYWOOD); setFont(Font.font(12));
-        }}, actionRow, feedback);
-
-        // Beim Anzeigen Münzen aktualisieren
+        // Münzen beim Öffnen refreshen
         panel.visibleProperty().addListener((obs, o, n) -> {
-            if (n) refreshCoinLabel(coinLabel);
+            if (n) refreshCoinLabel();
         });
 
         return panel;
     }
 
-    // kleines Hilfsfeld, damit onAdded darauf zugreifen kann
-    private Label feedbackLabel;
 
-    private Button makeSeedButton(PlantType type, Label coinLabel) {
-        String cost = type.seedCost == 0 ? "kostenlos" : type.seedCost + "€";
-        Button btn = new Button(type.emoji + " " + type.displayName + "\n" + cost);
-        btn.setFont(Font.font(12));
-        btn.setWrapText(true);
-        btn.setPrefWidth(68);
-        btn.setStyle("""
-                -fx-background-color: #3a2010;
-                -fx-text-fill: #f5deb3;
-                -fx-border-color: #8b6914;
-                -fx-border-width: 1;
-                -fx-border-radius: 6;
-                -fx-background-radius: 6;
-                """);
-        btn.setOnMouseEntered(e -> btn.setStyle("""
-                -fx-background-color: #5a3520;
-                -fx-text-fill: #ffe4b5;
-                -fx-border-color: goldenrod;
-                -fx-border-width: 1;
-                -fx-border-radius: 6;
-                -fx-background-radius: 6;
-                """));
-        btn.setOnMouseExited(e -> btn.setStyle("""
-                -fx-background-color: #3a2010;
-                -fx-text-fill: #f5deb3;
-                -fx-border-color: #8b6914;
-                -fx-border-width: 1;
-                -fx-border-radius: 6;
-                -fx-background-radius: 6;
-                """));
-        btn.setOnAction(e -> {
-            if (!inventory.spend(type.seedCost)) {
-                showFeedback("Nicht genug Münzen! ", false);
-                return;
-            }
-            double[] pos = playerPosSupplier.get();
-            boolean planted = field.plant(type, pos[0], pos[1]);
-            if (!planted) {
-                inventory.addCoins(type.seedCost); // Rückerstattung
-                showFeedback("Diese Zelle ist bereits belegt oder außerhalb!", false);
-            } else {
-                showFeedback(type.displayName + " gepflanzt! " + type.emoji + "  (wächst " + type.growSeconds + "s)", true);
-            }
-            refreshCoinLabel(coinLabel);
+
+    // ── Saatgut-Button ────────────────────────────────────────────────────────
+
+    private StackPane makeSeedButton(PlantType type) {
+        StackPane btn = new StackPane();
+        btn.setPrefSize(72, 90);
+        btn.setStyle(BG_MID + roundBorder("#6b4a20", 10));
+
+        // Vektorzeichnung der Saatgut-Tüte
+        Group icon = SeedIcon.create(type, 44);
+        // Icon etwas nach oben schieben, damit Name darunter passt
+        icon.setTranslateY(-6);
+
+        Label nameLabel = new Label(type.displayName);
+        nameLabel.setFont(Font.font("Arial", FontWeight.BOLD, 9));
+        nameLabel.setTextFill(LIGHT_TAN);
+        nameLabel.setTranslateY(28);   // unterhalb der Tüte
+
+        btn.getChildren().addAll(icon, nameLabel);
+
+        // Tooltip
+        Tooltip tip = new Tooltip(type.displayName + "  " + type.emoji
+                + "\nWächst in " + type.growSeconds + "s");
+        tip.setStyle("-fx-background-color: #2b1a0e; -fx-text-fill: #f5deb3; "
+                   + "-fx-font-size: 12; -fx-border-color: #d4a017; -fx-border-width: 1;");
+        Tooltip.install(btn, tip);
+
+        // Hover
+        btn.setOnMouseEntered(e -> btn.setStyle(BG_HOVER + roundBorder("#d4a017", 10)));
+        btn.setOnMouseExited(e  -> {
+            if (activeTool == Tool.SEED && selectedSeed == type)
+                btn.setStyle(BG_ACTIVE + roundBorder("#d4a017", 10));
+            else
+                btn.setStyle(BG_MID + roundBorder("#6b4a20", 10));
         });
+
+        // Klick → als aktives Saatgut wählen
+        btn.setOnMouseClicked(e -> {
+            deselectAllSeeds();
+            deselectToolButtons();   // erst Tools zurücksetzen
+            selectedSeed = type;
+            activeTool   = Tool.SEED; // dann eigenen Modus setzen
+            btn.setStyle(BG_ACTIVE + roundBorder("#d4a017", 10));
+            showFeedback("Bereit zum Pflanzen: " + type.displayName + "  " + type.emoji
+                       + " – Zelle anklicken", true);
+        });
+
+        // Referenz speichern für Deselect
+        btn.setUserData(type);
         return btn;
     }
 
-    private Button makeActionButton(String text, Color color) {
-        Button btn = new Button(text);
-        btn.setFont(Font.font("Arial", FontWeight.BOLD, 13));
-        btn.setTextFill(color);
-        btn.setStyle("""
-                -fx-background-color: #2a1808;
-                -fx-border-color: #8b6914;
-                -fx-border-width: 1;
-                -fx-border-radius: 8;
-                -fx-background-radius: 8;
-                -fx-padding: 6 14;
-                """);
-        btn.setOnMouseEntered(e -> btn.setStyle("""
-                -fx-background-color: #4a2818;
-                -fx-border-color: goldenrod;
-                -fx-border-width: 1;
-                -fx-border-radius: 8;
-                -fx-background-radius: 8;
-                -fx-padding: 6 14;
-                """));
-        btn.setOnMouseExited(e -> btn.setStyle("""
-                -fx-background-color: #2a1808;
-                -fx-border-color: #8b6914;
-                -fx-border-width: 1;
-                -fx-border-radius: 8;
-                -fx-background-radius: 8;
-                -fx-padding: 6 14;
-                """));
+    /** Hebt Highlight aller Saatgut-Buttons auf */
+    private void deselectAllSeeds() {
+        for (var node : seedRow.getChildren()) {
+            if (node instanceof StackPane sp) {
+                sp.setStyle(BG_MID + roundBorder("#6b4a20", 10));
+            }
+        }
+    }
+
+    // ── Werkzeug-Button ───────────────────────────────────────────────────────
+
+    private StackPane makeToolButton(Tool tool) {
+        StackPane btn = new StackPane();
+        btn.setPrefSize(72, 90);
+        btn.setStyle(BG_MID + roundBorder("#6b4a20", 10));
+
+        Group icon   = tool == Tool.WATER ? drawWateringCan() : drawSickle();
+        String tipText = tool == Tool.WATER
+                ? "Gießkanne – Zelle klicken zum Bewässern"
+                : "Sichel – Zelle klicken zum Ernten";
+        String name  = tool == Tool.WATER ? "Gießkanne" : "Sichel";
+
+        icon.setTranslateY(-6);
+        Label nameLabel = new Label(name);
+        nameLabel.setFont(Font.font("Arial", FontWeight.BOLD, 9));
+        nameLabel.setTextFill(LIGHT_TAN);
+        nameLabel.setTranslateY(28);
+        btn.getChildren().addAll(icon, nameLabel);
+
+        Tooltip tip = new Tooltip(tipText);
+        tip.setStyle("-fx-background-color: #2b1a0e; -fx-text-fill: #f5deb3; "
+                   + "-fx-font-size: 12; -fx-border-color: #d4a017; -fx-border-width: 1;");
+        Tooltip.install(btn, tip);
+
+        btn.setOnMouseEntered(e -> {
+            if (activeTool != tool)
+                btn.setStyle(BG_HOVER + roundBorder("#d4a017", 10));
+        });
+        btn.setOnMouseExited(e -> {
+            if (activeTool != tool)
+                btn.setStyle(BG_MID + roundBorder("#6b4a20", 10));
+        });
+        btn.setOnMouseClicked(e -> selectTool(btn, tool));
+
         return btn;
     }
 
-    private void refreshCoinLabel(Label coinLabel) {
-        coinLabel.setText("💰 Münzen: " + inventory.getCoins());
+    // ── Gießkannen-Vektor ──────────────────────────────────────────────────────
+
+    private static Group drawWateringCan() {
+        Group g = new Group();
+        Color body   = Color.web("#4a90c8");
+        Color dark   = Color.web("#2a6090");
+        Color light  = Color.web("#7ab8e8");
+
+        // Kannen-Körper (Trapez)
+        Polygon can = new Polygon(
+                4.0, 18.0,
+                38.0, 18.0,
+                34.0, 38.0,
+                8.0,  38.0);
+        can.setFill(new LinearGradient(0, 0, 1, 0, true, CycleMethod.NO_CYCLE,
+                new Stop(0, light), new Stop(1, dark)));
+        can.setStroke(dark);
+        can.setStrokeWidth(1.2);
+        can.setStrokeLineJoin(StrokeLineJoin.ROUND);
+        g.getChildren().add(can);
+
+        // Deckel
+        Rectangle lid = new Rectangle(4, 14, 34, 6);
+        lid.setArcWidth(4); lid.setArcHeight(4);
+        lid.setFill(dark); lid.setStroke(dark.darker()); lid.setStrokeWidth(1);
+        g.getChildren().add(lid);
+
+        // Ausguss-Rohr (schräg nach links-oben)
+        Line spout = new Line(4, 22, -12, 10);
+        spout.setStroke(dark); spout.setStrokeWidth(5);
+        spout.setStrokeLineCap(StrokeLineCap.ROUND);
+        g.getChildren().add(spout);
+
+        // Ausguss-Brause (kleines Rechteck am Ende)
+        Rectangle rose = new Rectangle(-18, 6, 8, 6);
+        rose.setArcWidth(2); rose.setArcHeight(2);
+        rose.setFill(dark); rose.setStroke(dark.darker()); rose.setStrokeWidth(0.8);
+        g.getChildren().add(rose);
+
+        // Wassertropfen aus Brause
+        for (int i = 0; i < 4; i++) {
+            Circle drop = new Circle(-16 + i * 2.5, 14 + i * 3, 1.2, Color.web("#a0d8f8"));
+            drop.setOpacity(0.8);
+            g.getChildren().add(drop);
+        }
+
+        // Griff oben (Bogen)
+        Arc handle = new Arc(21, 8, 14, 10, 20, 140);
+        handle.setType(ArcType.OPEN);
+        handle.setFill(Color.TRANSPARENT);
+        handle.setStroke(dark); handle.setStrokeWidth(3.5);
+        handle.setStrokeLineCap(StrokeLineCap.ROUND);
+        g.getChildren().add(handle);
+
+        g.setTranslateX(10);
+        g.setTranslateY(2);
+        return g;
+    }
+
+    // ── Sichel-Vektor ──────────────────────────────────────────────────────────
+
+    private static Group drawSickle() {
+        Group g = new Group();
+        Color blade = Color.web("#c8c0a0");
+        Color dark  = Color.web("#808060");
+        Color wood  = Color.web("#8b5e3c");
+        Color woodD = Color.web("#5a3a1a");
+
+        // Klinge (großer Bogen)
+        Arc arc = new Arc(22, 28, 20, 18, 30, 200);
+        arc.setType(ArcType.OPEN);
+        arc.setFill(Color.TRANSPARENT);
+        arc.setStroke(blade);
+        arc.setStrokeWidth(5);
+        arc.setStrokeLineCap(StrokeLineCap.ROUND);
+        g.getChildren().add(arc);
+
+        // Klingenrücken (Highlight)
+        Arc arcShine = new Arc(22, 28, 17, 15, 40, 160);
+        arcShine.setType(ArcType.OPEN);
+        arcShine.setFill(Color.TRANSPARENT);
+        arcShine.setStroke(Color.web("#e8e0c8"));
+        arcShine.setStrokeWidth(1.5);
+        arcShine.setOpacity(0.6);
+        g.getChildren().add(arcShine);
+
+        // Holzgriff
+        Rectangle handle = new Rectangle(18, 30, 7, 16);
+        handle.setArcWidth(4); handle.setArcHeight(4);
+        handle.setFill(new LinearGradient(0, 0, 1, 0, true, CycleMethod.NO_CYCLE,
+                new Stop(0, Color.web("#b07848")), new Stop(1, woodD)));
+        handle.setStroke(woodD); handle.setStrokeWidth(1);
+        g.getChildren().add(handle);
+
+        // Griffring (Metallband)
+        Rectangle ring = new Rectangle(17, 33, 9, 3);
+        ring.setFill(dark); ring.setArcWidth(2); ring.setArcHeight(2);
+        g.getChildren().add(ring);
+
+        g.setTranslateX(2);
+        g.setTranslateY(0);
+        return g;
+    }
+
+    private void selectTool(StackPane btn, Tool tool) {
+        deselectAllSeeds();
+        deselectToolButtons();   // erst beide Tools visuell zurücksetzen
+        selectedSeed = null;
+        activeTool   = tool;     // dann eigenen Modus setzen
+        btn.setStyle(BG_ACTIVE + roundBorder("#d4a017", 10));
+        showFeedback(tool == Tool.WATER
+                ? "Gießkanne aktiv – Zelle anklicken 💧"
+                : "Sichel aktiv – Zelle anklicken 🌾",
+                true);
+    }
+
+    private void deselectToolButtons() {
+        if (waterToolBtn  != null) waterToolBtn.setStyle(BG_MID  + roundBorder("#6b4a20", 10));
+        if (harvestToolBtn != null) harvestToolBtn.setStyle(BG_MID + roundBorder("#6b4a20", 10));
+        // activeTool wird hier NICHT zurückgesetzt – das macht der Aufrufer selbst
+    }
+
+    // ── Aktion auf Zelle ausführen (wird von FarmField-Klick aufgerufen) ──────
+
+    /**
+     * Haupteinstieg: FarmField ruft diese Methode auf, wenn der Spieler
+     * auf eine Feldzelle klickt.
+     *
+     * @param worldX  Welt-X der angeklickten Zelle (Mitte)
+     * @param worldY  Welt-Y der angeklickten Zelle (Mitte)
+     */
+    public void onCellClicked(double worldX, double worldY) {
+        switch (activeTool) {
+            case SEED -> {
+                if (selectedSeed == null) {
+                    showFeedback("Wähle zuerst ein Saatgut!", false);
+                    return;
+                }
+                boolean planted = field.plant(selectedSeed, worldX, worldY);
+                if (planted) {
+                    showFeedback(selectedSeed.displayName + " gepflanzt! " + selectedSeed.emoji
+                               + "  (wächst " + selectedSeed.growSeconds + "s)", true);
+                } else {
+                    showFeedback("Diese Zelle ist bereits belegt!", false);
+                }
+            }
+            case WATER -> {
+                boolean watered = field.waterPlants(worldX, worldY);
+                if (watered) {
+                    // Gießkanne animieren über der angeklickten Zelle
+                    wateringAnimation.play(worldX, worldY);
+                    showFeedback("Bewässert! 💧", true);
+                } else {
+                    PlantComponent comp = field.getPlantAt(worldX, worldY);
+                    if (comp == null)
+                        showFeedback("Hier wächst noch nichts.", false);
+                    else
+                        showFeedback("Braucht noch kein Wasser.", false);
+                }
+            }
+            case HARVEST -> {
+                PlantType harvested = field.harvest(worldX, worldY);
+                if (harvested != null) {
+                    inventory.addItem(harvested, harvested.harvestAmount);
+                    showFeedback("+" + harvested.harvestAmount + " "
+                               + harvested.displayName + " geerntet! "
+                               + harvested.emoji, true);
+                    refreshCoinLabel();
+                } else {
+                    PlantComponent comp = field.getPlantAt(worldX, worldY);
+                    if (comp != null && comp.needsWater())
+                        showFeedback("Pflanze braucht noch Wasser! 💧", false);
+                    else if (comp != null)
+                        showFeedback("Noch nicht reif.", false);
+                    else
+                        showFeedback("Hier ist nichts zum Ernten.", false);
+                }
+            }
+            default -> showFeedback("Wähle zuerst ein Werkzeug oder Saatgut.", false);
+        }
+    }
+
+    // ── Hilfsmethoden ─────────────────────────────────────────────────────────
+
+    private Label sectionLabel(String text) {
+        Label l = new Label(text.toUpperCase());
+        l.setFont(Font.font("Georgia", FontWeight.BOLD, 11));
+        l.setTextFill(Color.web("#9b7b40"));
+        l.setPadding(new Insets(4, 0, 0, 0));
+        return l;
+    }
+
+    private Rectangle makeDivider() {
+        Rectangle r = new Rectangle(504, 1);   // panel.prefWidth(540) - padding(18*2) - 0
+        r.setFill(Color.web("#6b4a20", 0.6));
+        return r;
+    }
+
+    private void refreshCoinLabel() {
+        if (coinLabel != null)
+            coinLabel.setText("💰 " + inventory.getCoins());
     }
 
     private void showFeedback(String msg, boolean success) {
+        if (feedbackLabel == null) return;
         feedbackLabel.setText(msg);
-        feedbackLabel.setTextFill(success ? Color.LIGHTGREEN : Color.TOMATO);
+        feedbackLabel.setTextFill(success ? Color.web("#7ec850") : Color.web("#e05050"));
+    }
+
+    private static String roundBorder(String color, int radius) {
+        return " -fx-border-color: " + color + "; -fx-border-width: 1.5;"
+             + " -fx-border-radius: " + radius + "; -fx-background-radius: " + radius + ";";
     }
 
     // ── Sichtbarkeit ──────────────────────────────────────────────────────────
 
-    public void toggle() {
-        if (visible) hide(); else show();
-    }
-
-    public void show() {
-        visible = true;
-        root.setVisible(true);
-    }
-
-    public void hide() {
-        visible = false;
-        root.setVisible(false);
-    }
-
-    public boolean isVisible() { return visible; }
+    public void toggle()          { if (visible) hide(); else show(); }
+    public void show()            { visible = true;  root.setVisible(true);  }
+    public void hide()            { visible = false; root.setVisible(false); }
+    public boolean isVisible()    { return visible; }
+    public Tool    getActiveTool(){ return activeTool; }
+    public javafx.scene.Node getRootNode() { return root; }
 }
