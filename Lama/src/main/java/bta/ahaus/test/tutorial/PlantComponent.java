@@ -1,5 +1,7 @@
-package bta.ahaus.test.tutorial;
+package bta.ahaus.lamaDrama.controller.component;
 
+import bta.ahaus.lamaDrama.model.entity.PlantType;
+import bta.ahaus.lamaDrama.model.entity.FarmField;
 import com.almasb.fxgl.entity.component.Component;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
@@ -67,6 +69,7 @@ public class PlantComponent extends Component {
 
         root = new StackPane(background, progressBar, label, waterIndicator);
         root.setPrefSize(CELL_W, CELL_H);
+        root.setMouseTransparent(true);
 
         entity.getViewComponent().addChild(root);
     }
