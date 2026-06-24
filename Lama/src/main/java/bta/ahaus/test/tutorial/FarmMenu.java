@@ -1,10 +1,10 @@
-package bta.ahaus.lamaDrama.view.ui;
+package bta.ahaus.test.tutorial;
 
-import bta.ahaus.lamaDrama.controller.component.PlantComponent;
-import bta.ahaus.lamaDrama.controller.component.WateringAnimation;
-import bta.ahaus.lamaDrama.model.data.Inventory;
-import bta.ahaus.lamaDrama.model.entity.PlantType;
-import bta.ahaus.lamaDrama.model.entity.FarmField;
+import bta.ahaus.test.tutorial.PlantComponent;
+import bta.ahaus.test.tutorial.WateringAnimation;
+import bta.ahaus.test.tutorial.Inventory;
+import bta.ahaus.test.tutorial.PlantType;
+import bta.ahaus.test.tutorial.FarmField;
 import com.almasb.fxgl.dsl.FXGL;
 import javafx.animation.*;
 import javafx.geometry.Insets;
@@ -100,11 +100,21 @@ public class FarmMenu {
         panel.setPrefWidth(540);
 
         // Holz-Gradient-Hintergrund
-        panel.setBackground(new Background(new BackgroundFill(
-                new LinearGradient(0, 0, 0, 1, true, CycleMethod.NO_CYCLE,
+        panel.setBackground(
+            new javafx.scene.layout.Background(
+                new BackgroundFill(
+                    new LinearGradient(
+                        0, 0, 0, 1,
+                        true,
+                        CycleMethod.NO_CYCLE,
                         new Stop(0.0, Color.web("#3d2410")),
-                        new Stop(1.0, Color.web("#1e0f06"))),
-                new CornerRadii(14), Insets.EMPTY)));
+                        new Stop(1.0, Color.web("#1e0f06"))
+                    ),
+                    new CornerRadii(14),
+                    Insets.EMPTY
+                )
+            )
+        );
 
         panel.setBorder(new Border(new BorderStroke(
                 GOLD, BorderStrokeStyle.SOLID,
@@ -423,12 +433,27 @@ public class FarmMenu {
                     showFeedback("Wähle zuerst ein Saatgut!", false);
                     return;
                 }
+                if (inventory.getSeedCount(selectedSeed) <= 0) {
+                    showFeedback("❌ Kein Saatgut vorhanden!", false);
+                    return;
+                }
+                
                 boolean planted = field.plant(selectedSeed, worldX, worldY);
+
                 if (planted) {
-                    showFeedback(selectedSeed.displayName + " gepflanzt! " + selectedSeed.emoji
-                               + "  (wächst " + selectedSeed.growSeconds + "s)", true);
+                    inventory.removeSeed(selectedSeed, 1);
+                    showFeedback(
+                            selectedSeed.displayName
+                            + " gepflanzt! "
+                            + selectedSeed.emoji,
+                            true
+                    );
+
                 } else {
-                    showFeedback("Diese Zelle ist bereits belegt!", false);
+                    showFeedback(
+                            "Diese Zelle ist bereits belegt!",
+                            false
+                    );
                 }
             }
             case WATER -> {
@@ -447,35 +472,35 @@ public class FarmMenu {
             }
             case HARVEST -> {
                 PlantType harvested = field.harvest(worldX, worldY);
+
                 if (harvested != null) {
-                    inventory.addItem(harvested, harvested.harvestAmount);
-                    showFeedback("+" + harvested.harvestAmount + " "
-                               + harvested.displayName + " geerntet! "
-                               + harvested.emoji, true);
-                    refreshCoinLabel();
-                } else {
-                    PlantComponent comp = field.getPlantAt(worldX, worldY);
-                    if (comp != null && comp.needsWater())
-                        showFeedback("Pflanze braucht noch Wasser! 💧", false);
-                    else if (comp != null)
-                        showFeedback("Noch nicht reif.", false);
-                    else
-                        showFeedback("Hier ist nichts zum Ernten.", false);
+
+                    inventory.addHarvest(
+                            harvested,
+                            harvested.harvestAmount
+                    );
+
+                    showFeedback(
+                            "+" + harvested.harvestAmount + " "
+                            + harvested.displayName + " geerntet! "
+                            + harvested.emoji,
+                            true
+                    );
                 }
             }
-            default -> showFeedback("Wähle zuerst ein Werkzeug oder Saatgut.", false);
         }
     }
 
     // ── Hilfsmethoden ─────────────────────────────────────────────────────────
 
     private Label sectionLabel(String text) {
-        Label l = new Label(text.toUpperCase());
-        l.setFont(Font.font("Georgia", FontWeight.BOLD, 11));
-        l.setTextFill(Color.web("#9b7b40"));
-        l.setPadding(new Insets(4, 0, 0, 0));
-        return l;
-    }
+       Label label = new Label(text.toUpperCase());
+       label.setFont(Font.font("Georgia", FontWeight.BOLD, 11));
+       label.setTextFill(Color.web("#9b7b40"));
+       label.setPadding(new Insets(4, 0, 0, 0));
+       return label;
+   }
+
 
     private Rectangle makeDivider() {
         Rectangle r = new Rectangle(504, 1);   // panel.prefWidth(540) - padding(18*2) - 0

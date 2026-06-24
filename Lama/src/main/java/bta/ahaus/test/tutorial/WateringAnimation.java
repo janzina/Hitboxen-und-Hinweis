@@ -1,4 +1,7 @@
+
 package bta.ahaus.lamaDrama.controller.component;
+
+
 
 import com.almasb.fxgl.dsl.FXGL;
 import javafx.animation.*;

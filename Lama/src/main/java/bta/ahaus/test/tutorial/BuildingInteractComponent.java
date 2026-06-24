@@ -75,14 +75,14 @@ public class BuildingInteractComponent extends Component {
                 }
                 break;
 
-            case "Erkunden":
-                isOpen = !isOpen;
-                System.out.println(isOpen ? "Erkunden geöffnet!" : "Erkunden geschlossen!");
-                break;
+           case "Erkunden":
+                new MinispielAuswahlWindow(
+                        inventory != null
+                                ? inventory
+                                : MVerwaltung.getInstance()
+                                .getInventory()
+                ).show();
 
-            default:
-                isOpen = !isOpen;
-                System.out.println(isOpen ? name + " geöffnet!" : name + " geschlossen!");
                 break;
         }
     }

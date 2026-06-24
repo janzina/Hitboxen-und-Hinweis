@@ -1,221 +1,367 @@
 package bta.ahaus.test.tutorial;
 
-import javafx.animation.KeyFrame;
-import javafx.animation.KeyValue;
-import javafx.animation.Timeline;
-import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.layout.*;
+import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
+import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.stage.Stage;
-import javafx.util.Duration;
 
 public class ShopMinispiel {
 
     public static void open(Inventory inventory) {
+
         Stage stage = new Stage();
-        stage.setTitle("Shop");
+        stage.setTitle("Hofladen");
 
-        // ── Hintergrund ────────────────────────────────────────────────────────
         BorderPane root = new BorderPane();
-        root.setStyle("-fx-background-color: #87CEEB;");
+        root.setStyle(
+                "-fx-background-color: linear-gradient(to bottom,#f4deb3,#c89b6d);"
+        );
 
-        // ── Titel oben ─────────────────────────────────────────────────────────
-       Label titel = new Label(" Willkommen im Shop ");
-        titel.setFont(Font.font("Arial", FontWeight.BOLD, 26));
-        titel.setTextFill(Color.WHITE);
-        titel.setPadding(new Insets(15));
+        Label titel = new Label("🏪 Hofladen");
+        titel.setFont(Font.font("Arial", FontWeight.BOLD, 28));
 
-        Label meldung = new Label("");
-        meldung.setTextFill(Color.RED);
-        meldung.setFont(Font.font(16));
+        root.setTop(titel);
+        BorderPane.setAlignment(titel, Pos.CENTER);
 
-        VBox oben = new VBox(5);
-        oben.setAlignment(Pos.CENTER);
-        oben.getChildren().addAll(titel, meldung);
-
-        root.setTop(oben);
-        
-        // ── Ballon in der Mitte ────────────────────────────────────────────────
-        ImageView ballon = new ImageView(new Image(
-            ShopMinispiel.class.getResourceAsStream(
-                "/assets/textures/minigames/ballon.png")));
-        ballon.setFitWidth(120);
-        ballon.setFitHeight(160);
-        ballon.setPreserveRatio(true);
-        ballon.setTranslateY(-300);
-        
-        ImageView shopStand = new ImageView(new Image(
-            ShopMinispiel.class.getResourceAsStream(
-                "/assets/textures/minigames/shop_stand.png")));
-        shopStand.setFitWidth(200);
-        shopStand.setPreserveRatio(true);
-        
-        
         Pane mitte = new Pane();
 
-        // Regal größer
-        shopStand.setFitWidth(450);
-        shopStand.setLayoutX(180);
-        shopStand.setLayoutY(120);
-
-        // Ballon
-        ballon.setLayoutX(360);
-        ballon.setLayoutY(0);
-
-        // Produkte auf dem Regal
-        Label apfel = new Label("🍎");
-        apfel.setStyle("-fx-font-size: 40px;");
-        apfel.setLayoutX(340);
-        apfel.setLayoutY(260);
-
-        Label schoko = new Label("🍫");
-        schoko.setStyle("-fx-font-size: 40px;");
-        schoko.setLayoutX(460);
-        schoko.setLayoutY(260);
-
-        Label kraeuter = new Label("🌿");
-        kraeuter.setStyle("-fx-font-size: 40px;");
-        kraeuter.setLayoutX(340);
-        kraeuter.setLayoutY(360);
-
-        Label honig = new Label("🍯");
-        honig.setStyle("-fx-font-size: 40px;");
-        honig.setLayoutX(460);
-        honig.setLayoutY(360);
-
-        // Klick auf Apfel
-        apfel.setOnMouseClicked(e -> {
-            if (PlayerStats.getInstance().getXP() >= 30 &&
-                inventory.spend(PlantType.APFEL.seedCost)) {
-
-                inventory.addItem(PlantType.APFEL, 1);
-                ballonLiefern(ballon);
-            }
-            if (PlayerStats.getInstance().getXP() < 30) {
-            meldung.setText("❌ Du kannst das noch nicht kaufen!");
-            return;
-        }
-            meldung.setText("✅ Gekauft!");
-        });
-
-        // Klick auf Schokolade
-       schoko.setOnMouseClicked(e -> {
-            if (PlayerStats.getInstance().getXP() < 50) {
-                meldung.setText("❌ Du kannst das noch nicht kaufen!");
-                return;
-            }
-
-            if (!inventory.spend(PlantType.SCHOKOLADE.seedCost)) {
-                meldung.setText("💰 Du hast zu wenig Münzen!");
-                return;
-            }
-
-            meldung.setText("✅ Schokolade gekauft!");
-
-            inventory.addItem(PlantType.SCHOKOLADE, 1);
-            ballonLiefern(ballon);
-        });
+        Label meldung = new Label();    
+        meldung.setFont(Font.font(18));
+        meldung.setLayoutX(350);
+        meldung.setLayoutY(10);
        
-        // Klick auf Kräutermix
-        kraeuter.setOnMouseClicked(e -> {
-            if (PlayerStats.getInstance().getXP() >= 80 &&
-                inventory.spend(PlantType.KRAEUTERMIX.seedCost)) {
 
-                inventory.addItem(PlantType.KRAEUTERMIX, 1);
-                ballonLiefern(ballon);
-            }
-            if (PlayerStats.getInstance().getXP() < 80) {
-            meldung.setText("❌ Du kannst das noch nicht kaufen!");
-            return;
-        }
-            meldung.setText("✅ Gekauft!");
-        });
+       ImageView regal = new ImageView(
+            new Image(
+                ShopMinispiel.class.getResourceAsStream(
+                    "/assets/textures/minigames/holz_regal.png"
+                )
+            )
+        );
 
-        // Klick auf Honig
-        honig.setOnMouseClicked(e -> {
-            if (PlayerStats.getInstance().getXP() >= 100 &&
-                inventory.spend(PlantType.HONIG.seedCost)) {
+        regal.setFitWidth(1120);
+        regal.setPreserveRatio(true);
 
-                inventory.addItem(PlantType.HONIG, 1);
-                ballonLiefern(ballon);
-            }   
-            if (PlayerStats.getInstance().getXP() < 100) {
-            meldung.setText("❌ Du kannst das noch nicht kaufen!");
-            return;
-        }
-            meldung.setText("✅ Gekauft!");
-        });
+        regal.setLayoutX(40);
+        regal.setLayoutY(-20);
+        
+        ImageView apfel = new ImageView(
+                new Image(
+                        ShopMinispiel.class.getResourceAsStream(
+                                "/assets/textures/minigames/apfel.png"
+                        )
+                )
+        );
+        
+        apfel.setFitWidth(70);
+        apfel.setPreserveRatio(true);
+        apfel.setLayoutX(140);
+        apfel.setLayoutY(20);
+
+        Label apfelPreis =
+                new Label("🍎\n3 Münzen\n30 XP");
+        apfelPreis.setLayoutX(130);
+        apfelPreis.setLayoutY(90);
+
+        ImageView schoko = new ImageView(
+                new Image(
+                        ShopMinispiel.class.getResourceAsStream(
+                                "/assets/textures/minigames/schokolade.png"
+                        )
+                )
+        );
+        
+        schoko.setFitWidth(70);
+        schoko.setPreserveRatio(true);
+        schoko.setLayoutX(360);
+        schoko.setLayoutY(20);
+
+        Label schokoPreis =
+                new Label("🍫\n5 Münzen\n50 XP");
+        schokoPreis.setLayoutX(350);
+        schokoPreis.setLayoutY(90);
+
+        ImageView kraeuter = new ImageView(
+                new Image(
+                        ShopMinispiel.class.getResourceAsStream(
+                                "/assets/textures/minigames/kraeutermix.png"
+                        )
+                )
+        );
+        
+        kraeuter.setFitWidth(70);
+        kraeuter.setPreserveRatio(true);
+        kraeuter.setLayoutX(580);
+        kraeuter.setLayoutY(20);
+
+        Label kraeuterPreis =
+                new Label("🌿\n8 Münzen\n80 XP");
+        kraeuterPreis.setLayoutX(570);
+        kraeuterPreis.setLayoutY(90);
+
+        ImageView honig = new ImageView(
+                new Image(
+                        ShopMinispiel.class.getResourceAsStream(
+                                "/assets/textures/minigames/honig.png"
+                        )
+                )
+        );
+        honig.setFitWidth(70);
+        honig.setPreserveRatio(true);
+        honig.setLayoutX(800);
+        honig.setLayoutY(20);
+
+        Label honigPreis =
+                new Label("🍯\n12 Münzen\n100 XP");
+        honigPreis.setLayoutX(790);
+        honigPreis.setLayoutY(90);
+
+        
+        var karotte = SeedIcon.create(
+                PlantType.KAROTTE,80);
+        karotte.setLayoutX(120);
+        karotte.setLayoutY(300);
+
+        Label karottePreis =
+                new Label("0 Münzen");
+        karottePreis.setLayoutX(125);
+        karottePreis.setLayoutY(380);
+
+        var kartoffel = SeedIcon.create(
+                PlantType.KARTOFFEL,80);
+        kartoffel.setLayoutX(340);
+        kartoffel.setLayoutY(300);
+
+        Label kartoffelPreis =
+                new Label("5 Münzen");
+        kartoffelPreis.setLayoutX(345);
+        kartoffelPreis.setLayoutY(380);
+
+        var tomate = SeedIcon.create(
+                PlantType.TOMATE,80);
+        tomate.setLayoutX(560);
+        tomate.setLayoutY(300);
+
+        Label tomatePreis =
+                new Label("15 Münzen");
+        tomatePreis.setLayoutX(565);
+        tomatePreis.setLayoutY(380);
+
+        var weizen = SeedIcon.create(
+                PlantType.WEIZEN,80);
+        weizen.setLayoutX(780);
+        weizen.setLayoutY(300);
+
+        Label weizenPreis =
+                new Label("3 Münzen");
+        weizenPreis.setLayoutX(785);
+        weizenPreis.setLayoutY(380);
+
+        var kuerbis = SeedIcon.create(
+                PlantType.KUERBIS,80);
+        kuerbis.setLayoutX(1000);
+        kuerbis.setLayoutY(300);
+
+        Label kuerbisPreis =
+                new Label("25 Münzen");
+        kuerbisPreis.setLayoutX(1005);
+        kuerbisPreis.setLayoutY(380);
+
+        ImageView kasse = new ImageView(
+                new Image(
+                        ShopMinispiel.class.getResourceAsStream(
+                                "/assets/textures/minigames/Kasse.png"
+                        )
+                )
+        );
+
+        kasse.setFitWidth(700);
+        kasse.setPreserveRatio(true);
+
+        kasse.setLayoutX(-300);
+        kasse.setLayoutY(300);
+ 
+
+        kasse.setOnMouseClicked(e ->
+                VerkaufsFenster.open(inventory));
+        
+        apfel.setOnMouseClicked(e ->
+                kaufeSpezialitaet(
+                        inventory,
+                        PlantType.APFEL,
+                        meldung
+                ));
+
+        schoko.setOnMouseClicked(e ->
+                kaufeSpezialitaet(
+                        inventory,
+                        PlantType.SCHOKOLADE,
+                        meldung
+                ));
+
+        kraeuter.setOnMouseClicked(e ->
+                kaufeSpezialitaet(
+                        inventory,
+                        PlantType.KRAEUTERMIX,
+                        meldung
+                ));
+
+        honig.setOnMouseClicked(e ->
+                kaufeSpezialitaet(
+                        inventory,
+                        PlantType.HONIG,
+                        meldung
+                ));
+
+        karotte.setOnMouseClicked(e ->
+                kaufeSaatgut(
+                        inventory,
+                        PlantType.KAROTTE,
+                        meldung
+                ));
+
+        kartoffel.setOnMouseClicked(e ->
+                kaufeSaatgut(
+                        inventory,
+                        PlantType.KARTOFFEL,
+                        meldung
+                ));
+
+        tomate.setOnMouseClicked(e ->
+                kaufeSaatgut(
+                        inventory,
+                        PlantType.TOMATE,
+                        meldung
+                ));
+
+        weizen.setOnMouseClicked(e ->
+                kaufeSaatgut(
+                        inventory,
+                        PlantType.WEIZEN,
+                        meldung
+                ));
+
+        kuerbis.setOnMouseClicked(e ->
+                kaufeSaatgut(
+                        inventory,
+                        PlantType.KUERBIS,
+                        meldung
+                ));
+        
+        Label info = new Label(
+            "🌱 Saatgut kaufen\n\n" +
+            "🚜 Auf dem Feld pflanzen\n\n" +
+            "🌾 Ernten\n\n" +
+            "💰 An der Kasse verkaufen oder verfüttern"
+        );
+
+        info.setStyle(
+            "-fx-background-color: #4b573e;" +
+            "-fx-padding: 20;" +
+            "-fx-border-color: #4f772d;" +
+            "-fx-border-width: 3;" +
+            "-fx-font-size: 16;" +
+            "-fx-font-weight: bold;" +
+            "-fx-background-radius: 10;" +
+            "-fx-border-radius: 10;"
+        );
+        
+        info.setPrefWidth(340);
+        info.setPrefHeight(190);
+        info.setWrapText(true);
+
+        info.setLayoutX(650);
+        info.setLayoutY(450);        
 
         mitte.getChildren().addAll(
-            shopStand,
-            ballon,
-            apfel,
-            schoko,
-            kraeuter,
-            honig
+                regal,
+                meldung,
+                apfel,
+                schoko,
+                kraeuter,
+                honig,
+                apfelPreis,
+                schokoPreis,
+                kraeuterPreis,
+                honigPreis,
+                karotte,
+                kartoffel,
+                tomate,
+                weizen,
+                kuerbis,
+                karottePreis,
+                kartoffelPreis,
+                tomatePreis,
+                weizenPreis,
+                kuerbisPreis,
+                kasse,
+                info
         );
 
         root.setCenter(mitte);
 
-        // ── Unten: Münzen, XP, Schließen ──────────────────────────────────────
-        HBox unten = new HBox(20);
-        unten.setAlignment(Pos.CENTER);
-        unten.setPadding(new Insets(10));
-        unten.setStyle("-fx-background-color: rgba(0,0,0,0.4);");
-
-        Label munzen = new Label("💰 " + inventory.getCoins() + " Münzen");
-        munzen.setFont(Font.font(15));
-        munzen.setTextFill(Color.GOLD);
-
-        Label xp = new Label("✨ " + PlayerStats.getInstance().getXP() + " XP");
-        xp.setFont(Font.font(15));
-        xp.setTextFill(Color.LIGHTGREEN);
-
-        Label schliessen = new Label("✖ Schließen");
-        schliessen.setFont(Font.font("Arial", FontWeight.BOLD, 15));
-        schliessen.setTextFill(Color.WHITE);
-        schliessen.setPadding(new Insets(5, 15, 5, 15));
-        schliessen.setStyle("-fx-background-color: #cc4444; -fx-background-radius: 8;");
-        schliessen.setOnMouseClicked(e -> stage.close());
-
-        unten.getChildren().addAll(munzen, xp, schliessen);
-        root.setBottom(unten);
-
-        // Fenster anzeigen
-        stage.setScene(new Scene(root, 900, 600));
+        Scene scene = new Scene(root,1200,700);
+        stage.setScene(scene);
         stage.show();
     }
 
-    // ── Ballon kommt von oben runter und fliegt wieder weg ────────────────────
- private static void ballonLiefern(ImageView ballon) {
+    private static void kaufeSaatgut(
+            Inventory inventory,
+            PlantType type,
+            Label meldung) {
 
-    Timeline animation = new Timeline(
+        if (!inventory.spend(type.seedCost)) {
+            meldung.setText("❌ Nicht genug Münzen!");
+            return;
+        }
 
-        // Start oben
-        new KeyFrame(Duration.seconds(0),
-            new KeyValue(ballon.translateYProperty(), -300)),
+        inventory.addSeed(type,1);
 
-        // Beim Shop ankommen
-        new KeyFrame(Duration.seconds(2),
-            new KeyValue(ballon.translateYProperty(), 0)),
-
-        // 2 Sekunden beim Shop stehen bleiben
-        new KeyFrame(Duration.seconds(4),
-            new KeyValue(ballon.translateYProperty(), 0)),
-
-        // Dann wieder wegfliegen
-        new KeyFrame(Duration.seconds(6),
-            new KeyValue(ballon.translateYProperty(), -300))
-    );
-
-        animation.play();
+        meldung.setText(
+                "✅ " +
+                type.displayName +
+                " gekauft!"
+        );
     }
 
+    private static void kaufeSpezialitaet(
+            Inventory inventory,
+            PlantType type,
+            Label meldung) {
+
+        if (PlayerStats.getInstance().getXP()
+                < type.minXP) {
+
+            meldung.setText(
+                    "❌ Du brauchst "
+                            + type.minXP
+                            + " XP!"
+            );
+            return;
+        }
+
+        if (!inventory.spend(type.seedCost)) {
+
+            meldung.setText(
+                    "❌ Nicht genug Münzen!"
+            );
+            return;
+        }
+
+        inventory.addSeed(type,1);
+
+        meldung.setText(
+                "✅ "
+                        + type.displayName
+                        + " gekauft!"
+        );
+    }
 }
