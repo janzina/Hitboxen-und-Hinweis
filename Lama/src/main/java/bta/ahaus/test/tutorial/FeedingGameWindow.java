@@ -61,7 +61,7 @@ public class FeedingGameWindow {
         buildRoom(root);
 
         // ── Lama ─────────────────────────────────────────────────────────
-        ImageView llama = FXGL.texture("llama.png");
+        ImageView llama = FXGL.texture("minigames/Lama_clean.png");
         llama.setFitWidth(300);
         llama.setFitHeight(300);
         llama.setLayoutX(440);
@@ -338,7 +338,7 @@ public class FeedingGameWindow {
                            PlantType type, String texture,
                            double x, double y) {
 
-        if (inventory.getItem(type) <= 0) return;
+        if (inventory.getHarvestCount(type) <= 0) return;
 
         ImageView food = FXGL.texture(texture);
         food.setFitWidth(90);
@@ -347,7 +347,7 @@ public class FeedingGameWindow {
         food.setLayoutY(y);
         food.setEffect(new DropShadow(8, 2, 3, Color.rgb(0,0,0,0.4)));
 
-        StackPane badge = ItemBadge.create(inventory.getItem(type));
+        StackPane badge = ItemBadge.create(inventory.getHarvestCount(type));
         badge.setLayoutX(x + 62);
         badge.setLayoutY(y - 10);
 
@@ -362,7 +362,7 @@ public class FeedingGameWindow {
 
         food.setOnMouseReleased(e -> {
             if (food.getBoundsInParent().intersects(llama.getBoundsInParent())) {
-                inventory.removeItem(type, 1);
+                inventory.removeHarvest(type, 1);
                 fedCount++;
 
                 PlayerStats.getInstance().addHunger(hungerGainFor(type));
@@ -376,9 +376,9 @@ public class FeedingGameWindow {
                     showRewardPopup(root);
                 }
 
-                if (inventory.getItem(type) > 0) {
-                    spawnFood(root, llama, type, texture, x, y);
-                }
+               if (inventory.getHarvestCount(type) > 0) {
+                   spawnFood(root, llama, type, texture, x, y);
+}
             }
         });
 

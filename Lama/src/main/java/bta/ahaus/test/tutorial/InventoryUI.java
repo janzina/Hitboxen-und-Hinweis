@@ -38,9 +38,15 @@ public class InventoryUI {
         VBox panel = new VBox(4);
         panel.setPadding(new Insets(10));
         panel.setPrefWidth(165);
-        panel.setBackground(new Background(new BackgroundFill(
+        panel.setBackground(
+        new javafx.scene.layout.Background(
+            new BackgroundFill(
                 Color.rgb(20, 12, 4, 0.80),
-                new CornerRadii(10), Insets.EMPTY)));
+                new CornerRadii(10),
+                Insets.EMPTY
+            )
+        )
+    );
         panel.setBorder(new Border(new BorderStroke(
                 Color.GOLDENROD, BorderStrokeStyle.SOLID,
                 new CornerRadii(10), new BorderWidths(1.5))));
@@ -71,15 +77,36 @@ public class InventoryUI {
 
         return panel;
     }
-
+    
     /** Muss regelmäßig (onUpdate) aufgerufen werden. */
     public void refresh() {
-        coinLabel.setText("💰 Münzen: " + inventory.getCoins());
+        coinLabel.setText("💰 " + inventory.getCoins());
+
         for (PlantType type : PlantType.values()) {
-            int count = inventory.getItem(type);
+            int seeds = inventory.getSeedCount(type);
+            int crops = inventory.getHarvestCount(type);
+
             Label lbl = itemLabels.get(type);
-            lbl.setText(type.emoji + " " + type.displayName + ": " + count);
-            lbl.setTextFill(count > 0 ? Color.LIGHTGREEN : Color.WHEAT);
+
+            if (type.isSpezialitaet()) {
+                lbl.setText(
+                        type.emoji + " "
+                        + type.displayName
+                        + ": "
+                        + crops
+                );
+
+            } else {
+                lbl.setText(
+                        type.displayName
+                        + "\n📦 Saatgut: "
+                        + seeds
+                        + "\n"
+                        + type.emoji
+                        + " Ernte: "
+                        + crops
+                );
+            }
         }
     }
 }

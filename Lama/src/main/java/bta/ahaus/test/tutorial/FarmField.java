@@ -1,7 +1,7 @@
-package bta.ahaus.lamaDrama.model.entity;
+package bta.ahaus.test.tutorial;
 
-import bta.ahaus.lamaDrama.view.ui.FarmMenu;
-import bta.ahaus.lamaDrama.controller.component.PlantComponent;
+import bta.ahaus.test.tutorial.FarmMenu;
+import bta.ahaus.test.tutorial.PlantComponent;
 import com.almasb.fxgl.dsl.FXGL;
 import com.almasb.fxgl.entity.Entity;
 import javafx.geometry.Point2D;

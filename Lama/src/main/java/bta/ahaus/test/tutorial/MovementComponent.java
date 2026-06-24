@@ -6,7 +6,7 @@ import com.almasb.fxgl.entity.components.TransformComponent;
 public class MovementComponent extends Component {
 
     private TransformComponent xyHandler;
-    private Hintergrund        hintergrund;
+    private Background        hintergrund;
     private double             speed;
 
     // Sprite ist 64x128px → Füße sind unten mittig
@@ -22,7 +22,7 @@ public class MovementComponent extends Component {
 
     private boolean moved = false;
 
-    public void setHintergrund(Hintergrund hintergrund) {
+    public void setHintergrund(Background hintergrund) {
         this.hintergrund = hintergrund;
     }
 

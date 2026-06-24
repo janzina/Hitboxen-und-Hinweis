@@ -34,9 +34,15 @@ public class HudDisplay {
         VBox panel = new VBox(4);
         panel.setPadding(new Insets(10));
         panel.setPrefWidth(165);
-        panel.setBackground(new Background(new BackgroundFill(
+        panel.setBackground(
+        new javafx.scene.layout.Background(
+            new BackgroundFill(
                 Color.rgb(20, 12, 4, 0.80),
-                new CornerRadii(10), Insets.EMPTY)));
+                new CornerRadii(10),
+                Insets.EMPTY
+            )
+        )
+    );
         panel.setBorder(new Border(new BorderStroke(
                 Color.GOLDENROD, BorderStrokeStyle.SOLID,
                 new CornerRadii(10), new BorderWidths(1.5))));
@@ -99,7 +105,6 @@ public class HudDisplay {
 
         // XP & Coins
         xpLabel.setText("✨ XP: "   + gs.getXP());
-        coinsLabel.setText("🪙 "    + gs.getCoins() + " Coins");
 
         // Dreck
         int dreck = lamaDreck.getDreckProzent();

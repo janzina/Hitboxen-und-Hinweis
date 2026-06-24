@@ -1,6 +1,6 @@
-package bta.ahaus.lamaDrama.view.ui;
+package bta.ahaus.test.tutorial;
 
-import bta.ahaus.lamaDrama.model.entity.PlantType;
+import bta.ahaus.test.tutorial.PlantType;
 import javafx.scene.Group;
 import javafx.scene.effect.DropShadow;
 import javafx.scene.paint.Color;

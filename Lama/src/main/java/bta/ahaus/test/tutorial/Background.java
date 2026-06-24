@@ -6,7 +6,7 @@ import javafx.geometry.Rectangle2D;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Hintergrund {
+public class Background {
     private final int originalTileSize = 16;
     private final int scale = 4;
     private final int tileSize = originalTileSize * scale;

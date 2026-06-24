@@ -6,7 +6,13 @@ import java.util.Map;
 public class Inventory {
 
     private int coins = 50;
-    private final Map<PlantType, Integer> items =
+
+    // Saatgut
+    private final Map<PlantType, Integer> seeds =
+            new EnumMap<>(PlantType.class);
+
+    // Ernte
+    private final Map<PlantType, Integer> harvest =
             new EnumMap<>(PlantType.class);
 
     public int getCoins() {
@@ -25,26 +31,49 @@ public class Inventory {
         return true;
     }
 
-    public void addItem(PlantType type, int count) {
-        items.merge(type, count, Integer::sum);
+    // -----------------------
+    // Saatgut
+    // -----------------------
+
+    public void addSeed(PlantType type, int amount) {
+        seeds.merge(type, amount, Integer::sum);
     }
 
-    public int getItem(PlantType type) {
-        return items.getOrDefault(type, 0);
+    public int getSeedCount(PlantType type) {
+        return seeds.getOrDefault(type, 0);
     }
 
-    public boolean removeItem(PlantType type, int count) {
+    public boolean removeSeed(PlantType type, int amount) {
 
-        int current = getItem(type);
+        int current = getSeedCount(type);
 
-        if (current < count)
+        if (current < amount)
             return false;
 
-        items.put(type, current - count);
+        seeds.put(type, current - amount);
         return true;
     }
 
-    public Map<PlantType, Integer> getAllItems() {
-        return Map.copyOf(items);
+    // -----------------------
+    // Ernte
+    // -----------------------
+
+    public void addHarvest(PlantType type, int amount) {
+        harvest.merge(type, amount, Integer::sum);
+    }
+
+    public int getHarvestCount(PlantType type) {
+        return harvest.getOrDefault(type, 0);
+    }
+
+    public boolean removeHarvest(PlantType type, int amount) {
+
+        int current = getHarvestCount(type);
+
+        if (current < amount)
+            return false;
+
+        harvest.put(type, current - amount);
+        return true;
     }
 }
