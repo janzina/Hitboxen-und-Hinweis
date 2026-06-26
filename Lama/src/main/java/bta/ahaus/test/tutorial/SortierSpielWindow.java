@@ -39,19 +39,10 @@ public class SortierSpielWindow {
         stage = new Stage();
 
         Pane root = new Pane();
-
-        ImageView background = new ImageView(
-                new Image(
-                        getClass().getResourceAsStream(
-                                "/assets/textures/minigames/Lagerhalle.png"
-                        )
-                )
+        
+        root.setStyle(
+                "-fx-background-color: linear-gradient(to bottom,#efe6d2,#d9c4a3);"
         );
-
-        background.setFitWidth(1200);
-        background.setFitHeight(700);
-
-        root.getChildren().add(background);
 
         titel = new Label(
                 "📦 Ernte nach Gewicht sortieren"
@@ -64,10 +55,10 @@ public class SortierSpielWindow {
         root.getChildren().add(titel);
 
         createWaage(root);
+        createWaagenTisch(root);
         createAnleitung(root);
         createTisch(root);
-        createRegal(root);
-
+        createSortierPlaetze(root);
         createRandomKisten(root);
 
         Button pruefen =
@@ -77,7 +68,7 @@ public class SortierSpielWindow {
         pruefen.setPrefHeight(50);
 
         pruefen.setLayoutX(930);
-        pruefen.setLayoutY(590);
+        pruefen.setLayoutY(500);
 
         pruefen.setOnAction(e -> {
 
@@ -136,7 +127,31 @@ public class SortierSpielWindow {
         root.getChildren().add(nochmal);
        
     }
+    
+    private void createKiste(
+            Pane root,
+            String name,
+            int gewicht,
+            double x,
+            double y
+            ) {
 
+        KistenKarte karte =
+                new KistenKarte(
+                        name,
+                        gewicht
+                );
+
+        karte.setLayoutX(x);
+        karte.setLayoutY(y);
+
+        enableDrag(karte);
+
+        kisten.add(karte);
+
+        root.getChildren().add(karte);
+    }
+    
     private void createRandomKisten(Pane root) {
         int maxGewicht;
         int anzahlKisten;
@@ -166,9 +181,7 @@ public class SortierSpielWindow {
         List<Integer> gewichte =
                 new ArrayList<>();
 
-        for (int i = 1;
-             i <= maxGewicht;
-             i++) {
+        for (int i = 1; i <= maxGewicht; i++) {
 
             gewichte.add(i);
         }
@@ -186,19 +199,17 @@ public class SortierSpielWindow {
                 "Erdbeeren"
         };
 
-        for (int i = 0;
-             i < anzahlKisten;
-             i++) {
+     for (int i = 0; i < anzahlKisten; i++) {
 
-            int spalte = i / 3;
-            int zeile = i % 3;
+            int spalte = i / 4;
+            int zeile = i % 4;
 
             createKiste(
                     root,
                     namen[i],
                     gewichte.get(i),
-                    40 + spalte * 140,
-                    430 + zeile * 70
+                    40 + spalte * 110,
+                    110 + zeile * 90
             );
         }
     }
@@ -213,27 +224,26 @@ public class SortierSpielWindow {
                 )
         );
 
-        waage.setFitWidth(250);
+        waage.setFitWidth(130);
         waage.setPreserveRatio(true);
 
-        waage.setLayoutX(120);
-        waage.setLayoutY(180);
+        waage.setLayoutX(135);
+        waage.setLayoutY(395);
 
-        gewichtAnzeige =
-                new Label("⚖️ ? kg");
+        gewichtAnzeige = new Label(" ? kg");
 
-        gewichtAnzeige.setFont(
-                Font.font(28)
-        );
+        gewichtAnzeige.setFont(Font.font(18));
 
         gewichtAnzeige.setStyle(
-                "-fx-background-color: rgba(255,255,255,0.9);" +
-                "-fx-padding: 10;" +
-                "-fx-background-radius: 10;"
+                "-fx-background-color:white;" +
+                "-fx-padding:8;" +
+                "-fx-background-radius:8;" +
+                "-fx-border-color:#8b5a2b;" +
+                "-fx-border-radius:8;"
         );
 
-        gewichtAnzeige.setLayoutX(120);
-        gewichtAnzeige.setLayoutY(450);
+        gewichtAnzeige.setLayoutX(110);
+        gewichtAnzeige.setLayoutY(515);
 
         root.getChildren().addAll(
                 waage,
@@ -244,36 +254,76 @@ public class SortierSpielWindow {
     private void createAnleitung(Pane root) {
 
         Label info = new Label(
-                "1. Kiste anklicken\n\n" +
-                "2. Gewicht merken\n\n" +
-                "3. Auf den Tisch ziehen\n\n" +
-                "4. Von links nach rechts\n" +
-                "   sortieren"
+                "📋 Aufgabe\n\n" +
+                "1. Ziehe eine Kiste auf die Waage.\n\n" +
+                "2. Merke dir das Gewicht.\n\n" +
+                "3. Lege die Kiste auf einen Platz.\n\n" +
+                "4. Sortiere die Kistne von links nach rechts\n" +
+                "   (leicht → schwer).\n\n" +
+                "5. Klicke auf Prüfen."
         );
 
         info.setStyle(
-                "-fx-background-color: rgba(255,255,255,0.92);" +
+                "-fx-background-color: #d7b98e;" +
                 "-fx-padding: 20;" +
-                "-fx-border-color: saddlebrown;" +
-                "-fx-border-width: 2;" +
+                "-fx-border-color: #6b4226;" +
+                "-fx-border-width: 3;" +
                 "-fx-background-radius: 15;" +
                 "-fx-border-radius: 15;" +
-                "-fx-font-size: 18;"
+                "-fx-font-size: 16;" +
+                "-fx-text-fill: #3e2723;"
         );
 
-        info.setLayoutX(900);
-        info.setLayoutY(170);
+        info.setLayoutX(875);
+        info.setLayoutY(60);
 
         root.getChildren().add(info);
     }
+    
+    private void createWaagenTisch(Pane root) {
 
+        Rectangle platte = new Rectangle(
+                130,
+                560,
+                120,
+                45
+        );
+
+        platte.setStyle(
+                "-fx-fill:#8b5a2b;"
+        );
+
+        Rectangle bein1 = new Rectangle(
+                150,
+                605,
+                25,
+                120
+        );
+
+        Rectangle bein2 = new Rectangle(
+                235,
+                605,
+                25,
+                120
+        );
+
+        bein1.setStyle("-fx-fill:#6b4226;");
+        bein2.setStyle("-fx-fill:#6b4226;");
+
+        root.getChildren().addAll(
+                platte,
+                bein1,
+                bein2
+        );
+    }
+    
     private void createTisch(Pane root) {
 
         Rectangle platte =
                 new Rectangle(
                         250,
                         560,
-                        720,
+                        900,
                         45
                 );
 
@@ -291,7 +341,7 @@ public class SortierSpielWindow {
 
         Rectangle bein2 =
                 new Rectangle(
-                        900,
+                        1080,
                         605,
                         35,
                         120
@@ -306,119 +356,95 @@ public class SortierSpielWindow {
                 bein2
         );
     }
+    private void createSortierPlaetze(Pane root) {
+        
+        int anzahl = kistenAnzahl();
 
-    private void createKiste(
-            Pane root,
-            String name,
-            int gewicht,
-            double x,
-            double y
-    ) {
+        double breite = 780.0 / anzahl;
+        double startX = 315;
 
-        KistenKarte karte =
-                new KistenKarte(
-                        name,
-                        gewicht
-                );
+        for (int i = 0; i < anzahl; i++) {
 
-        karte.setLayoutX(x);
-        karte.setLayoutY(y);
+            Rectangle platz =
+                    new Rectangle(
+                            startX + i * breite,
+                            435,
+                            70,
+                            70
+                    );
 
-        enableDrag(karte);
+            platz.setArcWidth(15);
+            platz.setArcHeight(15);
 
-       karte.setOnMouseReleased(e -> {
-        if (karte.getBoundsInParent()
-                .intersects(
-                        waage.getBoundsInParent()
-                )) {
-
-            gewichtAnzeige.setText(
-                    "⚖️ " +
-                    karte.getGewicht() +
-                    " kg"
+            platz.setStyle(
+                    "-fx-fill: rgba(255,255,255,0.45);" +
+                    "-fx-stroke:#8b5a2b;" +
+                    "-fx-stroke-width:3;"
             );
+
+            root.getChildren().add(platz);
         }
-    });
-
-        kisten.add(karte);
-
-        root.getChildren().add(karte);
     }
     
-    private void createRegal(Pane root) {
+    private int kistenAnzahl() {
 
-        Rectangle seiteLinks =
-                new Rectangle(
-                        20,
-                        260,
-                        25,
-                        280
-                );
+        switch (difficulty) {
 
-        Rectangle seiteRechts =
-                new Rectangle(
-                        170,
-                        260,
-                        25,
-                        280
-                );
+            case LEICHT:
+                return 4;
 
-        Rectangle fach1 =
-                new Rectangle(
-                        20,
-                        320,
-                        175,
-                        15
-                );
+            case MITTEL:
+                return 6;
 
-        Rectangle fach2 =
-                new Rectangle(
-                        20,
-                        410,
-                        175,
-                        15
-                );
+            case SCHWER:
+                return 8;
 
-        Rectangle fach3 =
-                new Rectangle(
-                        20,
-                        500,
-                        175,
-                        15
-                );
-
-        seiteLinks.setStyle("-fx-fill:#6b4226;");
-        seiteRechts.setStyle("-fx-fill:#6b4226;");
-
-        fach1.setStyle("-fx-fill:#8b5a2b;");
-        fach2.setStyle("-fx-fill:#8b5a2b;");
-        fach3.setStyle("-fx-fill:#8b5a2b;");
-
-        root.getChildren().addAll(
-                seiteLinks,
-                seiteRechts,
-                fach1,
-                fach2,
-                fach3
-        );
+            default:
+                return 4;
+        }
     }
-
-    private void enableDrag(
-            KistenKarte karte
-    ) {
+    
+    private void enableDrag(KistenKarte karte) {
 
         karte.setOnMouseDragged(e -> {
 
-            karte.setLayoutX(
-                    e.getSceneX() - 60
-            );
+            karte.setLayoutX(e.getSceneX() - 45);
+            karte.setLayoutY(e.getSceneY() - 35);
 
-            karte.setLayoutY(
-                    e.getSceneY() - 40
-            );
+        });
+
+        karte.setOnMouseReleased(e -> {
+
+            if (karte.getBoundsInParent().intersects(
+                    waage.getBoundsInParent())) {
+
+                gewichtAnzeige.setText(
+                        "Gewicht: "
+                                + karte.getGewicht()
+                                + " kg");
+            }
+
+            double startX = 315;
+            double breite = 780.0 / kistenAnzahl();
+
+            if (karte.getLayoutY() > 430) {
+
+                int slot = (int) Math.round(
+                        (karte.getLayoutX() - startX) / breite);
+
+                if (slot >= 0 &&
+                        slot < kistenAnzahl()) {
+
+                    karte.setLayoutX(
+                            startX + slot * breite + 5);
+
+                    karte.setLayoutY(465);
+                }
+            }
         });
     }
 
+    
     private boolean checkOrder() {
 
         List<KistenKarte> aktuell =
@@ -487,14 +513,6 @@ public class SortierSpielWindow {
                 " XP | +" +
                 coins +
                 " Münzen"
-        );
-        
-        titel.setText(
-        "✅ Geschafft! +"
-                + xp
-                + " XP | +"
-                + coins
-                + " Münzen"
         );
 
         verlassen.setVisible(true);
