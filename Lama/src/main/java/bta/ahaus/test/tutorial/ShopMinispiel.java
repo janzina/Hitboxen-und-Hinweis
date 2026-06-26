@@ -137,42 +137,53 @@ public class ShopMinispiel {
 
         var kartoffel = SeedIcon.create(
                 PlantType.KARTOFFEL,80);
-        kartoffel.setLayoutX(340);
+        kartoffel.setLayoutX(310);
         kartoffel.setLayoutY(300);
 
         Label kartoffelPreis =
                 new Label("5 Münzen");
-        kartoffelPreis.setLayoutX(345);
+        kartoffelPreis.setLayoutX(315);
         kartoffelPreis.setLayoutY(380);
 
         var tomate = SeedIcon.create(
                 PlantType.TOMATE,80);
-        tomate.setLayoutX(560);
+        tomate.setLayoutX(500);
         tomate.setLayoutY(300);
 
         Label tomatePreis =
                 new Label("15 Münzen");
-        tomatePreis.setLayoutX(565);
+        tomatePreis.setLayoutX(505);
         tomatePreis.setLayoutY(380);
 
         var weizen = SeedIcon.create(
                 PlantType.WEIZEN,80);
-        weizen.setLayoutX(780);
+        weizen.setLayoutX(700);
         weizen.setLayoutY(300);
 
         Label weizenPreis =
                 new Label("3 Münzen");
-        weizenPreis.setLayoutX(785);
+        weizenPreis.setLayoutX(705);
         weizenPreis.setLayoutY(380);
+        
+        var kohl = SeedIcon.create(
+               PlantType.KOHL, 80);
+        kohl.setLayoutX(810);
+        kohl.setLayoutY(300);
+       
+        Label kohlPreis =
+                new Label("10 Münzen");
+
+        kohlPreis.setLayoutX(815);
+        kohlPreis.setLayoutY(380);
 
         var kuerbis = SeedIcon.create(
                 PlantType.KUERBIS,80);
-        kuerbis.setLayoutX(1000);
+        kuerbis.setLayoutX(995);
         kuerbis.setLayoutY(300);
 
         Label kuerbisPreis =
                 new Label("25 Münzen");
-        kuerbisPreis.setLayoutX(1005);
+        kuerbisPreis.setLayoutX(1000);
         kuerbisPreis.setLayoutY(380);
 
         ImageView kasse = new ImageView(
@@ -248,6 +259,13 @@ public class ShopMinispiel {
                         PlantType.WEIZEN,
                         meldung
                 ));
+        
+        kohl.setOnMouseClicked(e ->
+                kaufeSaatgut(
+                        inventory,
+                        PlantType.KOHL,
+                        meldung
+                ));
 
         kuerbis.setOnMouseClicked(e ->
                 kaufeSaatgut(
@@ -255,31 +273,7 @@ public class ShopMinispiel {
                         PlantType.KUERBIS,
                         meldung
                 ));
-        
-        Label info = new Label(
-            "🌱 Saatgut kaufen\n\n" +
-            "🚜 Auf dem Feld pflanzen\n\n" +
-            "🌾 Ernten\n\n" +
-            "💰 An der Kasse verkaufen oder verfüttern"
-        );
-
-        info.setStyle(
-            "-fx-background-color: #4b573e;" +
-            "-fx-padding: 20;" +
-            "-fx-border-color: #4f772d;" +
-            "-fx-border-width: 3;" +
-            "-fx-font-size: 16;" +
-            "-fx-font-weight: bold;" +
-            "-fx-background-radius: 10;" +
-            "-fx-border-radius: 10;"
-        );
-        
-        info.setPrefWidth(340);
-        info.setPrefHeight(190);
-        info.setWrapText(true);
-
-        info.setLayoutX(650);
-        info.setLayoutY(450);        
+                
 
         mitte.getChildren().addAll(
                 regal,
@@ -296,14 +290,15 @@ public class ShopMinispiel {
                 kartoffel,
                 tomate,
                 weizen,
+                kohl,
                 kuerbis,
                 karottePreis,
                 kartoffelPreis,
                 tomatePreis,
                 weizenPreis,
+                kohlPreis,
                 kuerbisPreis,
-                kasse,
-                info
+                kasse
         );
 
         root.setCenter(mitte);

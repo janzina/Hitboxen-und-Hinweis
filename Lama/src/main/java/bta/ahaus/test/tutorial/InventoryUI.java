@@ -88,15 +88,17 @@ public class InventoryUI {
 
             Label lbl = itemLabels.get(type);
 
-            if (type.isSpezialitaet()) {
+          if (type.isSpezialitaet()) {
+
                 lbl.setText(
                         type.emoji + " "
                         + type.displayName
                         + ": "
-                        + crops
+                        + seeds
                 );
 
             } else {
+
                 lbl.setText(
                         type.displayName
                         + "\n📦 Saatgut: "

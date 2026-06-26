@@ -1,8 +1,9 @@
-package bta.ahaus.lamaDrama.controller.component;
-
-
+package bta.ahaus.test.tutorial;
 import bta.ahaus.lamaDrama.model.entity.PlantType;
 import bta.ahaus.lamaDrama.model.entity.FarmField;
+import bta.ahaus.test.tutorial.PlantType;
+import bta.ahaus.test.tutorial.FarmField;
+
 import com.almasb.fxgl.entity.component.Component;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
